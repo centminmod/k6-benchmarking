@@ -1,5 +1,3 @@
-// TIME=2
-// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=https://blog.centminmod.com/ --no-usage-report benchmark.js
 import { check } from "k6";
 import { sleep } from "k6";
 import http from "k6/http";
