@@ -51,15 +51,17 @@ export default function () {
   tagWithCurrentStageIndex();
   // console.log(exec.test.options.scenarios.default.stages[0].target)
   // console.log(exec.instance.vusActive);
-  let params = {
+  const params = {
     headers: {
       "Accept-Encoding": "gzip, deflate",
     },
     // cookies: { my_cookie: 'value' },
     // redirects: 5,
-    // tags: { multistage_gzip: 'yes' }
+    tags: { 
+      gzip: 'yes'
+    }
   };
-  let res = http.get(`${__ENV.URL}`, params);
+  const res = http.get(`${__ENV.URL}`, params);
   // console.log('Response time was ' + String(res.timings.duration) + ' ms');
   check(res, {
     "is status 200": (r) => r.status === 200,
