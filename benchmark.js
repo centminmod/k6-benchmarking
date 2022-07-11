@@ -30,8 +30,8 @@ export let options = {
     max: "tls1.3",
   },
   stages: [
-    { duration: `${__ENV.STAGETIME}`, target: 25 },
-    { duration: `${__ENV.STAGETIME}`, target: 50 },
+    { duration: `${__ENV.STAGETIME}`, target: 100 },
+    { duration: `${__ENV.STAGETIME}`, target: 100 },
     { duration: `${__ENV.STAGETIME}`, target: 0 },
   ],
   thresholds: {
