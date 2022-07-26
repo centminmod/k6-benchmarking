@@ -49,7 +49,7 @@ export let options = {
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: " ", enableColors: true }),
-    "summary.json": JSON.stringify(data),
+    "summary2.json": JSON.stringify(data),
   };
 }
 
