@@ -439,29 +439,35 @@ Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=60s -e URL=https://domai
            * default: Up to 10 looping VUs for 4m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
 
 
-running (4m00.0s), 00/10 VUs, 662696 complete and 0 interrupted iterations
+running (4m00.0s), 00/10 VUs, 648722 complete and 0 interrupted iterations
 default ✓ [======================================] 00/10 VUs  4m0s
      █ main index page
 
        ✓ is status 200
 
-     checks.........................: 100.00% ✓ 662696      ✗ 0     
-     data_received..................: 1.6 GB  6.5 MB/s
-     data_sent......................: 26 MB   108 kB/s
-     group_duration.................: avg=835.65µs min=204.7µs  med=391.48µs max=44.95ms p(95)=2.5ms    p(99)=8.66ms   p(99.99)=22.5ms  count=662696
-     http_req_blocked...............: avg=282ns    min=108ns    med=219ns    max=6.66ms  p(95)=306ns    p(99)=373ns    p(99.99)=6.96µs  count=662696
-     http_req_connecting............: avg=7ns      min=0s       med=0s       max=2.51ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=662696
-     http_req_duration..............: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
-       { expected_response:true }...: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
-     ✓ { gzip:yes }.................: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
-     http_req_failed................: 0.00%   ✓ 0           ✗ 662696
-     http_req_receiving.............: avg=191.2µs  min=8.58µs   med=21.11µs  max=35.75ms p(95)=949.41µs p(99)=1.96ms   p(99.99)=16.61ms count=662696
-     http_req_sending...............: avg=58.95µs  min=16.99µs  med=29.45µs  max=24.3ms  p(95)=188.91µs p(99)=256.45µs p(99.99)=13.62ms count=662696
-     http_req_tls_handshaking.......: avg=31ns     min=0s       med=0s       max=5.16ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=662696
-     http_req_waiting...............: avg=528.58µs min=0s       med=255.01µs max=34.53ms p(95)=1.31ms   p(99)=7.42ms   p(99.99)=18.2ms  count=662696
-     http_reqs......................: 662696  2761.210042/s
-     iteration_duration.............: avg=1.44ms   min=623.59µs med=962.19µs max=45.39ms p(95)=3.51ms   p(99)=10.27ms  p(99.99)=26.91ms count=662696
-     iterations.....................: 662696  2761.210042/s
+     checks.........................: 100.00% ✓ 648722      ✗ 0     
+     data_received..................: 1.5 GB  6.4 MB/s
+     data_sent......................: 25 MB   105 kB/s
+     group_duration.................: avg=854.19µs min=200µs    med=412.45µs max=41.13ms p(95)=2.76ms   p(99)=6.53ms   p(99.99)=23.86ms count=648722
+     http_req_blocked...............: avg=277ns    min=101ns    med=211ns    max=4.44ms  p(95)=299ns    p(99)=361ns    p(99.99)=9.33µs  count=648722
+     http_req_connecting............: avg=7ns      min=0s       med=0s       max=2.29ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=648722
+     http_req_duration..............: avg=797.72µs min=156.47µs med=356.46µs max=62.08ms p(95)=2.68ms   p(99)=6.3ms    p(99.99)=25.44ms count=648722
+       { expected_response:true }...: avg=797.72µs min=156.47µs med=356.46µs max=62.08ms p(95)=2.68ms   p(99)=6.3ms    p(99.99)=25.44ms count=648722
+     ✓ { gzip:yes }.................: avg=797.72µs min=156.47µs med=356.46µs max=62.08ms p(95)=2.68ms   p(99)=6.3ms    p(99.99)=25.44ms count=648722
+     http_req_failed................: 0.00%   ✓ 0           ✗ 648722
+     http_req_receiving.............: avg=262.93µs min=8.24µs   med=20.91µs  max=40.73ms p(95)=1.23ms   p(99)=2.78ms   p(99.99)=19.49ms count=648722
+     http_req_sending...............: avg=63µs     min=15.17µs  med=29µs     max=33.02ms p(95)=198.24µs p(99)=437.99µs p(99.99)=13.72ms count=648722
+     http_req_tls_handshaking.......: avg=18ns     min=0s       med=0s       max=1.58ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=648722
+     http_req_waiting...............: avg=471.78µs min=0s       med=260.77µs max=32.3ms  p(95)=1.25ms   p(99)=3.81ms   p(99.99)=16.57ms count=648722
+     http_reqs......................: 648722  2702.989389/s
+     iteration_duration.............: avg=1.47ms   min=622.42µs med=984.91µs max=51.69ms p(95)=3.71ms   p(99)=9.34ms   p(99.99)=28.56ms count=648722
+     iterations.....................: 648722  2702.989389/s
      vus............................: 1       min=1         max=10  
-     vus_max........................: 10      min=10        max=10  Process finished (241.43 seconds)
+     vus_max........................: 10      min=10        max=10  Process finished (241.45 seconds)
 ```
+
+InfluxDB + Grafana
+
+![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-01.png)
+
+![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-02.png)
