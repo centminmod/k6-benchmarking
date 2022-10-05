@@ -242,6 +242,30 @@ To filter for `http_req_duration` entries for tag for `expected_response = true`
 pzcat summary-raw.gz | jq -c 'select(.metric == "http_req_duration" and .data.tags.expected_response == "true")'
 ```
 
+To filter for `http_req_duration` entries that have status >= 200
+
+```
+pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_duration" and .data.tags.status >= "200")'
+```
+
+To average the value for `http_req_duration` entries that have status >= 200
+
+```
+pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_duration" and .data.tags.status >= "200") | .data.value' | jq -s 'add/length'
+```
+
+To min the value for `http_req_duration` entries that have status >= 200
+
+```
+pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_duration" and .data.tags.status >= "200") | .data.value' | jq -s min
+```
+
+To max the value for `http_req_duration` entries that have status >= 200
+
+```
+pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_duration" and .data.tags.status >= "200") | .data.value' | jq -s max
+```
+
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
 
 ![benchmark.js](/screenshots/users/plot-user-no-sleep.png)
