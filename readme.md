@@ -1,5 +1,11 @@
 [k6 benchmarking](https://k6.io/docs/)
 
+* [Install](#install)
+* [Benchmarks](#benchmarks)
+  * [Constant Request Rate Benchmarks](#constant-request-rate-benchmarks)
+  * [User Concurrency Benchmarks Without Random Sleep](#user-concurrency-benchmarks-without-random-sleep)
+  * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
+
 # Install
 
 * https://k6.io/docs/getting-started/installation/#linux
@@ -84,9 +90,81 @@ psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K serve
 
 ![benchmark-rps.js](/screenshots/rps/plot.png)
 
-## User Concurrency Benchmarks
+## User Concurrency Benchmarks Without Random Sleep
 
-User 100 concurrency 4 stage benchmarks with random sleep between 1 to 5 seconds with [`psrecord`](https://github.com/astrofrog/psrecord/) in `benchmark2.js` for `export default function ()`
+User 25, 50, 100, 0 concurrency 4 stage benchmarks without random sleep with [`psrecord`](https://github.com/astrofrog/psrecord/)
+
+```
+TIME=30
+DOMAIN=https://yourdomain.com/
+
+# method 1 run psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png &
+taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js
+
+# method 2 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+```
+
+```
+TIME=30
+DOMAIN=https://yourdomain.com/
+
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+
+Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=30s -e URL=https://domain1.com/ --no-usage-report --out json=summary-raw.gz benchmark.js' and attaching to process
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+  execution: local
+     script: benchmark.js
+     output: json (summary-raw.gz)
+
+  scenarios: (100.00%) 1 scenario, 100 max VUs, 2m30s max duration (incl. graceful stop):
+           * default: Up to 100 looping VUs for 2m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+running (2m00.0s), 000/100 VUs, 515498 complete and 0 interrupted iterations
+default ✓ [======================================] 000/100 VUs  2m0s
+     █ main index page
+
+       ✓ is status 200
+
+     checks.........................: 100.00% ✓ 515498      ✗ 0     
+     data_received..................: 1.2 GB  10 MB/s
+     data_sent......................: 20 MB   168 kB/s
+     group_duration.................: avg=9.28ms   min=206.71µs med=6.03ms  max=118.51ms p(95)=29.06ms  p(99)=45.52ms p(99.99)=89.95ms count=515498
+     http_req_blocked...............: avg=3.61µs   min=107ns    med=221ns   max=65.82ms  p(95)=326ns    p(99)=427ns   p(99.99)=13.44ms count=515498
+     http_req_connecting............: avg=1.59µs   min=0s       med=0s      max=38.03ms  p(95)=0s       p(99)=0s      p(99.99)=3.46ms  count=515498
+     http_req_duration..............: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
+       { expected_response:true }...: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
+     ✓ { gzip:yes }.................: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
+     http_req_failed................: 0.00%   ✓ 0           ✗ 515498
+     http_req_receiving.............: avg=3.77ms   min=9µs      med=1.73ms  max=107.19ms p(95)=14.31ms  p(99)=31.21ms p(99.99)=67.59ms count=515498
+     http_req_sending...............: avg=126.79µs min=13.99µs  med=29.29µs max=73.17ms  p(95)=185.48µs p(99)=1.7ms   p(99.99)=39.06ms count=515498
+     http_req_tls_handshaking.......: avg=1.66µs   min=0s       med=0s      max=52.81ms  p(95)=0s       p(99)=0s      p(99.99)=4.81ms  count=515498
+     http_req_waiting...............: avg=5.25ms   min=0s       med=2.39ms  max=91.08ms  p(95)=19.37ms  p(99)=26.88ms p(99.99)=51.61ms count=515498
+     http_reqs......................: 515498  4295.760443/s
+     iteration_duration.............: avg=10.14ms  min=618.59µs med=6.8ms   max=119.03ms p(95)=30.72ms  p(99)=48.28ms p(99.99)=91.41ms count=515498
+     iterations.....................: 515498  4295.760443/s
+     vus............................: 1       min=1         max=99  
+     vus_max........................: 100     min=100       max=100 Process finished (121.29 seconds)
+```
+
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+
+![benchmark.js](/screenshots/users/plot-user-no-sleep.png)
+
+## User Concurrency Benchmarks With Random Sleep
+
+User 25, 50, 100, 0 concurrency 4 stage benchmarks with random sleep between 1 to 5 seconds with [`psrecord`](https://github.com/astrofrog/psrecord/) in `benchmark2.js` for `export default function ()`
 
 ```javascript
   const sleepMin = 1;

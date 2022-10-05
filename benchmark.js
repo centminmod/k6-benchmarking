@@ -1,9 +1,16 @@
+//
+// TIME=30; DOMAIN=https://yourdomain.com/
+// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js
+//
 import { check } from "k6";
+import { group } from 'k6';
 import { sleep } from "k6";
 import http from "k6/http";
 import exec from "k6/execution";
 import { tagWithCurrentStageIndex } from "https://jslib.k6.io/k6-utils/1.3.0/index.js";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.1.0/index.js";
+// https://k6.io/docs/javascript-api/jslib/utils/randomstring/
+//import { randomString } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 import {
   jUnit,
   textSummary,
@@ -31,7 +38,8 @@ export let options = {
     max: "tls1.3",
   },
   stages: [
-    { duration: `${__ENV.STAGETIME}`, target: 100 },
+    { duration: `${__ENV.STAGETIME}`, target: 25 },
+    { duration: `${__ENV.STAGETIME}`, target: 50 },
     { duration: `${__ENV.STAGETIME}`, target: 100 },
     { duration: `${__ENV.STAGETIME}`, target: 0 },
   ],
@@ -68,11 +76,13 @@ export default function () {
       gzip: 'yes'
     }
   };
-  const res = http.get(`${__ENV.URL}`, params);
-  // console.log('Response time was ' + String(res.timings.duration) + ' ms');
-  check(res, {
-    "is status 200": (r) => r.status === 200,
-  });
-  // sleep(1);
-  sleep(randomIntBetween(sleepMin, sleepMax));
+  group('main index page', function () {
+    const res = http.get(`${__ENV.URL}`, params);
+    // console.log('Response time was ' + String(res.timings.duration) + ' ms');
+    check(res, {
+      "is status 200": (r) => r.status === 200,
+    });
+    // sleep(1);
+    // sleep(randomIntBetween(sleepMin, sleepMax));
+   });
 }
