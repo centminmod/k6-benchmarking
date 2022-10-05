@@ -5,6 +5,7 @@
   * [Constant Request Rate Benchmarks](#constant-request-rate-benchmarks)
   * [User Concurrency Benchmarks Without Random Sleep](#user-concurrency-benchmarks-without-random-sleep)
   * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
+* [InfluxDB + Grafana](#influxdb-grafana)
 
 # Install
 
@@ -353,3 +354,60 @@ default ✓ [======================================] 000/100 VUs  2m0s
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
 
 ![benchmark2.js](/screenshots/users/plot-user.png)
+
+# InfluxDB + Grafana
+
+Send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5))` is the time multiple by the 4+1 stage runs + 30s defined in `benchmark.js`.
+
+```
+TIME=60
+DOMAIN=https://yourdomain.com/
+export K6_INFLUXDB_USERNAME=
+export K6_INFLUXDB_PASSWORD=
+
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+```
+```
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=60s -e URL=https://domain1.com/ --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js' and attaching to process
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+  execution: local
+     script: benchmark.js
+     output: InfluxDBv1 (http://localhost:8186)
+
+  scenarios: (100.00%) 1 scenario, 10 max VUs, 4m30s max duration (incl. graceful stop):
+           * default: Up to 10 looping VUs for 4m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+running (4m00.0s), 00/10 VUs, 662696 complete and 0 interrupted iterations
+default ✓ [======================================] 00/10 VUs  4m0s
+     █ main index page
+
+       ✓ is status 200
+
+     checks.........................: 100.00% ✓ 662696      ✗ 0     
+     data_received..................: 1.6 GB  6.5 MB/s
+     data_sent......................: 26 MB   108 kB/s
+     group_duration.................: avg=835.65µs min=204.7µs  med=391.48µs max=44.95ms p(95)=2.5ms    p(99)=8.66ms   p(99.99)=22.5ms  count=662696
+     http_req_blocked...............: avg=282ns    min=108ns    med=219ns    max=6.66ms  p(95)=306ns    p(99)=373ns    p(99.99)=6.96µs  count=662696
+     http_req_connecting............: avg=7ns      min=0s       med=0s       max=2.51ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=662696
+     http_req_duration..............: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
+       { expected_response:true }...: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
+     ✓ { gzip:yes }.................: avg=778.74µs min=160.25µs med=332.7µs  max=48.17ms p(95)=2.4ms    p(99)=8.53ms   p(99.99)=25.54ms count=662696
+     http_req_failed................: 0.00%   ✓ 0           ✗ 662696
+     http_req_receiving.............: avg=191.2µs  min=8.58µs   med=21.11µs  max=35.75ms p(95)=949.41µs p(99)=1.96ms   p(99.99)=16.61ms count=662696
+     http_req_sending...............: avg=58.95µs  min=16.99µs  med=29.45µs  max=24.3ms  p(95)=188.91µs p(99)=256.45µs p(99.99)=13.62ms count=662696
+     http_req_tls_handshaking.......: avg=31ns     min=0s       med=0s       max=5.16ms  p(95)=0s       p(99)=0s       p(99.99)=0s      count=662696
+     http_req_waiting...............: avg=528.58µs min=0s       med=255.01µs max=34.53ms p(95)=1.31ms   p(99)=7.42ms   p(99.99)=18.2ms  count=662696
+     http_reqs......................: 662696  2761.210042/s
+     iteration_duration.............: avg=1.44ms   min=623.59µs med=962.19µs max=45.39ms p(95)=3.51ms   p(99)=10.27ms  p(99.99)=26.91ms count=662696
+     iterations.....................: 662696  2761.210042/s
+     vus............................: 1       min=1         max=10  
+     vus_max........................: 10      min=10        max=10  Process finished (241.43 seconds)
+```
