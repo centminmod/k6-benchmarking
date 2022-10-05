@@ -20,6 +20,75 @@ rm -rf k6-v0.40.0-linux-amd64/k6
 k6 version
 k6 v0.40.0 (2022-09-08T09:06:02+0000/v0.39.0-92-gdcbe2f9c, go1.18.6, linux/amd64)
 ```
+```
+k6 --help
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+Usage:
+  k6 [command]
+
+Available Commands:
+  archive     Create an archive
+  cloud       Run a test on the cloud
+  completion  Generate the autocompletion script for the specified shell
+  convert     Convert a HAR file to a k6 script
+  help        Help about any command
+  inspect     Inspect a script or archive
+  login       Authenticate with a service
+  pause       Pause a running test
+  resume      Resume a paused test
+  run         Start a load test
+  scale       Scale a running test
+  stats       Show test metrics
+  status      Show test status
+  version     Show application version
+
+Flags:
+  -a, --address string      address for the REST API server (default "localhost:6565")
+  -c, --config string       JSON config file (default "/root/.config/loadimpact/k6/config.json")
+  -h, --help                help for k6
+      --log-format string   log output format
+      --log-output string   change the output for k6 logs, possible values are stderr,stdout,none,loki[=host:port],file[=./path.fileformat] (default "stderr")
+      --no-color            disable colored output
+  -q, --quiet               disable progress updates
+  -v, --verbose             enable verbose logging
+
+Use "k6 [command] --help" for more information about a command.
+```
+
+Install psrecord
+
+```
+pip install psrecord
+```
+```
+psrecord --help
+usage: psrecord [-h] [--log LOG] [--plot PLOT] [--duration DURATION]
+                [--interval INTERVAL] [--include-children]
+                process_id_or_command
+
+Record CPU and memory usage for a process
+
+positional arguments:
+  process_id_or_command
+                        the process id or command
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --log LOG             output the statistics to a file
+  --plot PLOT           output the statistics to a plot
+  --duration DURATION   how long to record for (in seconds). If not specified,
+                        the recording is continuous until the job exits.
+  --interval INTERVAL   how long to wait between each sample (in seconds). By
+                        default the process is sampled as often as possible.
+  --include-children    include sub-processes in statistics (results in a
+                        slower maximum sampling rate).
+```
 
 # Benchmarks
 
@@ -156,6 +225,21 @@ default ✓ [======================================] 000/100 VUs  2m0s
      iterations.....................: 515498  4295.760443/s
      vus............................: 1       min=1         max=99  
      vus_max........................: 100     min=100       max=100 Process finished (121.29 seconds)
+```
+
+Using `jq` to filter `summary-raw.gz` summary log for the 4 stages via the tags for each stage.
+
+```
+pzcat summary-raw.gz | jq -r 'select(.data.tags | .stage == "3")'
+pzcat summary-raw.gz | jq -r 'select(.data.tags | .stage == "2")'
+pzcat summary-raw.gz | jq -r 'select(.data.tags | .stage == "1")'
+pzcat summary-raw.gz | jq -r 'select(.data.tags | .stage == "0")'
+```
+
+To filter for `http_req_duration` entries for tag for `expected_response = true`
+
+```
+pzcat summary-raw.gz | jq -c 'select(.metric == "http_req_duration" and .data.tags.expected_response == "true")'
 ```
 
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
