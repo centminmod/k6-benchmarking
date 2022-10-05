@@ -5,7 +5,7 @@
   * [Constant Request Rate Benchmarks](#constant-request-rate-benchmarks)
   * [User Concurrency Benchmarks Without Random Sleep](#user-concurrency-benchmarks-without-random-sleep)
   * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
-* [InfluxDB + Grafana](#influxdb-grafana)
+* [InfluxDB + Grafana](#influxdb--grafana)
 
 # Install
 
