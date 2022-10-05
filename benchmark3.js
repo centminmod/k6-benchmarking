@@ -1,6 +1,7 @@
+// https://k6.io/docs/using-k6/scenarios/arrival-rate/
 //
-// TIME=30; DOMAIN=https://yourdomain.com/
-// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw3.gz benchmark3.js
+// VU=50; REQRATE=1; TIME=30; DOMAIN=https://yourdomain.com/
+// taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw3.gz benchmark3.js
 //
 import { check } from "k6";
 import { group } from 'k6';
@@ -17,6 +18,15 @@ import {
 } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 export let options = {
+  scenarios: {
+    open_model: {
+      executor: 'constant-arrival-rate',
+      rate: `${__ENV.RPS}`,
+      timeUnit: '1s',
+      duration: `${__ENV.DURATION}`,
+      preAllocatedVUs: `${__ENV.USERS}`,
+    },
+  },
   // httpDebug: 'full',
   // insecureSkipTLSVerify: true,
   discardResponseBodies: true,
@@ -37,12 +47,6 @@ export let options = {
     min: "tls1.2",
     max: "tls1.3",
   },
-  stages: [
-    { duration: `${__ENV.STAGETIME}`, target: 25 },
-    { duration: `${__ENV.STAGETIME}`, target: 50 },
-    { duration: `${__ENV.STAGETIME}`, target: 100 },
-    { duration: `${__ENV.STAGETIME}`, target: 0 },
-  ],
   thresholds: {
     'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
     // http_req_duration: ["avg<150", "p(95)<500"],
@@ -60,7 +64,6 @@ export function handleSummary(data) {
 export default function () {
   const sleepMin = 1;
   const sleepMax = 5;
-  tagWithCurrentStageIndex();
   // console.log(exec.test.options.scenarios.default.stages[0].target)
   // console.log(exec.instance.vusActive);
   const params = {

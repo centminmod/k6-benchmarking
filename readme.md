@@ -1,5 +1,22 @@
 [k6 benchmarking](https://k6.io/docs/)
 
+# install
+
+* https://k6.io/docs/getting-started/installation/#linux
+
+```
+wget -4 https://github.com/grafana/k6/releases/download/v0.40.0/k6-v0.40.0-linux-amd64.tar.gz -O k6-v0.40.0-linux-amd64.tar.gz
+tar xvzf k6-v0.40.0-linux-amd64.tar.gz
+\cp -af k6-v0.40.0-linux-amd64/k6 /usr/local/bin/k6
+rm -rf k6-v0.40.0-linux-amd64/k6
+```
+```
+k6 version
+k6 v0.40.0 (2022-09-08T09:06:02+0000/v0.39.0-92-gdcbe2f9c, go1.18.6, linux/amd64)
+```
+
+# benchmarks
+
 ```
 TIME=10
 DOMAIN=https://domain.com/
