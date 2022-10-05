@@ -1,7 +1,7 @@
 // https://k6.io/docs/using-k6/scenarios/arrival-rate/
-//
-// VU=50; REQRATE=1; TIME=30; DOMAIN=https://yourdomain.com/
-// taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw3.gz benchmark3.js
+// for REQRATE = 10 request/s constant rate test
+// VU=50; REQRATE=10; TIME=30; DOMAIN=https://yourdomain.com/
+// taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js
 //
 import { check } from "k6";
 import { group } from 'k6';
@@ -25,6 +25,7 @@ export let options = {
       timeUnit: '1s',
       duration: `${__ENV.DURATION}`,
       preAllocatedVUs: `${__ENV.USERS}`,
+      maxVUs: 1000,
     },
   },
   // httpDebug: 'full',
@@ -62,8 +63,6 @@ export function handleSummary(data) {
 }
 
 export default function () {
-  const sleepMin = 1;
-  const sleepMax = 5;
   // console.log(exec.test.options.scenarios.default.stages[0].target)
   // console.log(exec.instance.vusActive);
   const params = {
@@ -85,7 +84,5 @@ export default function () {
     check(res, {
       "is status 200": (r) => r.status === 200,
     });
-    // sleep(1);
-    sleep(randomIntBetween(sleepMin, sleepMax));
    });
 }
