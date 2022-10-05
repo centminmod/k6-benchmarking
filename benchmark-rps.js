@@ -1,4 +1,5 @@
 // https://k6.io/docs/using-k6/scenarios/arrival-rate/
+// https://k6.io/docs/using-k6/scenarios/executors/constant-arrival-rate/
 // for REQRATE = 10 request/s constant rate test
 // VU=50; REQRATE=10; TIME=30; DOMAIN=https://yourdomain.com/
 // taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js

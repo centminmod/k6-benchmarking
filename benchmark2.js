@@ -1,6 +1,6 @@
 //
 // TIME=30; DOMAIN=https://yourdomain.com/
-// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw3.gz benchmark3.js
+// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js
 //
 import { check } from "k6";
 import { group } from 'k6';
