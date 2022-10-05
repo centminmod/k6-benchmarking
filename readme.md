@@ -95,7 +95,7 @@ optional arguments:
 
 ## Constant Request Rate Benchmarks
 
-For REQRATE = 100 request/s constant rate test with [`psrecord`](https://github.com/astrofrog/psrecord/)
+For REQRATE = 100 request/s constant rate test with [`psrecord`](https://github.com/astrofrog/psrecord/).   Where `--duration $((TIME+30))` is the `TIME` + 30s defined in `benchmark-rps.js`
 
 ```
 VU=20
@@ -103,7 +103,13 @@ REQRATE=100
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js" --include-children --interval 0.1 --duration 30 --log psrecord.log --plot plot.png
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord-rps-nginx.log --plot plot-rps-nginx.png &
+
+psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js" --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord.log --plot plot.png
 ```
 ```
 VU=20
@@ -111,9 +117,15 @@ REQRATE=100
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js" --include-children --interval 0.1 --duration 30 --log psrecord.log --plot plot.png
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord-rps-nginx.log --plot plot-rps-nginx.png &
 
-Starting up command 'taskset -c 0-3 k6 run -e RPS=100 -e DURATION=15s -e USERS=20 -e URL=https://domain1.com/ --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js' and attaching to process
+psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e DURATION=${TIME}s -e USERS=${VU} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js" --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord.log --plot plot.png
+
+Starting up command 'taskset -c 0-3 k6 run -e RPS=100 -e DURATION=30s -e USERS=20 -e URL=https://domain1.com/ --no-usage-report --out json=summary-raw-rps.gz benchmark-rps.js' and attaching to process
 
           /\      |‾‾| /‾‾/   /‾‾/   
      /\  /  \     |  |/  /   /  /    
@@ -125,65 +137,76 @@ Starting up command 'taskset -c 0-3 k6 run -e RPS=100 -e DURATION=15s -e USERS=2
      script: benchmark-rps.js
      output: json (summary-raw-rps.gz)
 
-  scenarios: (100.00%) 1 scenario, 1000 max VUs, 45s max duration (incl. graceful stop):
-           * open_model: 100.00 iterations/s for 15s (maxVUs: 20-1000, gracefulStop: 30s)
+  scenarios: (100.00%) 1 scenario, 1000 max VUs, 1m0s max duration (incl. graceful stop):
+           * open_model: 100.00 iterations/s for 30s (maxVUs: 20-1000, gracefulStop: 30s)
 
 
-running (15.0s), 0000/0020 VUs, 1501 complete and 0 interrupted iterations
-open_model ✓ [======================================] 0000/0020 VUs  15s  100.00 iters/s
+running (0m30.0s), 0000/0020 VUs, 3000 complete and 0 interrupted iterations
+open_model ✓ [======================================] 0000/0020 VUs  30s  100.00 iters/s
      █ main index page
 
        ✓ is status 200
 
-     checks.........................: 100.00% ✓ 1501       ✗ 0   
-     data_received..................: 3.6 MB  239 kB/s
-     data_sent......................: 73 kB   4.8 kB/s
-     group_duration.................: avg=278.22µs min=225.94µs med=260.97µs max=4.7ms    p(95)=304.74µs p(99)=963.37µs p(99.99)=4.21ms   count=1501
-     http_req_blocked...............: avg=9.72µs   min=160ns    med=262ns    max=922.33µs p(95)=361ns    p(99)=649.83µs p(99.99)=919.25µs count=1501
-     http_req_connecting............: avg=700ns    min=0s       med=0s       max=99.76µs  p(95)=0s       p(99)=44.79µs  p(99.99)=96.78µs  count=1501
-     http_req_duration..............: avg=213.93µs min=181.89µs med=209.62µs max=588.97µs p(95)=238.92µs p(99)=327.53µs p(99.99)=586.16µs count=1501
-       { expected_response:true }...: avg=213.93µs min=181.89µs med=209.62µs max=588.97µs p(95)=238.92µs p(99)=327.53µs p(99.99)=586.16µs count=1501
-     ✓ { gzip:yes }.................: avg=213.93µs min=181.89µs med=209.62µs max=588.97µs p(95)=238.92µs p(99)=327.53µs p(99.99)=586.16µs count=1501
-     http_req_failed................: 0.00%   ✓ 0          ✗ 1501
-     http_req_receiving.............: avg=21.72µs  min=14.74µs  med=19.78µs  max=194.79µs p(95)=27.82µs  p(99)=93.34µs  p(99.99)=193.84µs count=1501
-     http_req_sending...............: avg=57.33µs  min=25.28µs  med=31.96µs  max=312.68µs p(95)=202.96µs p(99)=211.36µs p(99.99)=309.35µs count=1501
-     http_req_tls_handshaking.......: avg=7.8µs    min=0s       med=0s       max=744.19µs p(95)=0s       p(99)=547.02µs p(99.99)=740.18µs count=1501
-     http_req_waiting...............: avg=134.87µs min=0s       med=152.74µs max=520.46µs p(95)=174.36µs p(99)=230.68µs p(99.99)=510.61µs count=1501
-     http_reqs......................: 1501    100.053087/s
-     iteration_duration.............: avg=291.89µs min=236.67µs med=273.92µs max=4.72ms   p(95)=319.85µs p(99)=983.59µs p(99.99)=4.24ms   count=1501
-     iterations.....................: 1501    100.053087/s
-     vus............................: 20      min=20       max=20
-     vus_max........................: 20      min=20       max=20Process finished (15.58 seconds)
+     checks.........................: 100.00% ✓ 3000      ✗ 0   
+     data_received..................: 7.1 MB  238 kB/s
+     data_sent......................: 131 kB  4.4 kB/s
+     group_duration.................: avg=288.4µs  min=232.7µs  med=271.13µs max=6.36ms   p(95)=330.81µs p(99)=437.09µs p(99.99)=5.79ms   count=3000
+     http_req_blocked...............: avg=5.98µs   min=154ns    med=259ns    max=3.93ms   p(95)=360ns    p(99)=799ns    p(99.99)=3.04ms   count=3000
+     http_req_connecting............: avg=1.05µs   min=0s       med=0s       max=2.15ms   p(95)=0s       p(99)=0s       p(99.99)=1.53ms   count=3000
+     http_req_duration..............: avg=228.72µs min=186.45µs med=219.13µs max=6.29ms   p(95)=258.79µs p(99)=305.58µs p(99.99)=5.67ms   count=3000
+       { expected_response:true }...: avg=228.72µs min=186.45µs med=219.13µs max=6.29ms   p(95)=258.79µs p(99)=305.58µs p(99.99)=5.67ms   count=3000
+     ✓ { gzip:yes }.................: avg=228.72µs min=186.45µs med=219.13µs max=6.29ms   p(95)=258.79µs p(99)=305.58µs p(99.99)=5.67ms   count=3000
+     http_req_failed................: 0.00%   ✓ 0         ✗ 3000
+     http_req_receiving.............: avg=21.41µs  min=14.37µs  med=20.19µs  max=136.93µs p(95)=27.72µs  p(99)=36.52µs  p(99.99)=130.43µs count=3000
+     http_req_sending...............: avg=60.9µs   min=25.83µs  med=33.25µs  max=317.2µs  p(95)=208.82µs p(99)=226.07µs p(99.99)=311.65µs count=3000
+     http_req_tls_handshaking.......: avg=4.19µs   min=0s       med=0s       max=1.63ms   p(95)=0s       p(99)=0s       p(99.99)=1.37ms   count=3000
+     http_req_waiting...............: avg=146.39µs min=0s       med=162.22µs max=6.22ms   p(95)=184.61µs p(99)=229.52µs p(99.99)=5.59ms   count=3000
+     http_reqs......................: 3000    99.994163/s
+     iteration_duration.............: avg=302.56µs min=245.1µs  med=284.47µs max=6.38ms   p(95)=348.05µs p(99)=462.9µs  p(99.99)=5.82ms   count=3000
+     iterations.....................: 3000    99.994163/s
+     vus............................: 20      min=20      max=20
+     vus_max........................: 20      min=20      max=20Process finished (33.45 seconds)
 ```
 
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
 
+For k6 run itself
+
 ![benchmark-rps.js](/screenshots/rps/plot.png)
+
+For Nginx web server tested
+
+![nginx](/screenshots/rps/plot-rps-nginx.png)
 
 ## User Concurrency Benchmarks Without Random Sleep
 
-User 25, 50, 100, 0 concurrency 4 stage benchmarks without random sleep with [`psrecord`](https://github.com/astrofrog/psrecord/)
+User 25, 50, 100, 0 concurrency 4 stage benchmarks without random sleep with [`psrecord`](https://github.com/astrofrog/psrecord/). Where `--duration $((TIME*5+30))` is the time multiple by the 4+1 stage runs + 30s defined in `benchmark.js`
 
 ```
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-# method 1 run psrecord in background
+# gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo server-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
-psrecord $spid --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png &
-taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep-nginx.log --plot plot-user-no-sleep-nginx.png &
 
-# method 2 initiated via psrecord
-psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+# run k6 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
 ```
 
 ```
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration 180 --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep-nginx.log --plot plot-user-no-sleep-nginx.png &
+
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw.gz benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
 
 Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=30s -e URL=https://domain1.com/ --no-usage-report --out json=summary-raw.gz benchmark.js' and attaching to process
 
@@ -197,35 +220,35 @@ Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=30s -e URL=https://domai
      script: benchmark.js
      output: json (summary-raw.gz)
 
-  scenarios: (100.00%) 1 scenario, 100 max VUs, 2m30s max duration (incl. graceful stop):
-           * default: Up to 100 looping VUs for 2m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+  scenarios: (100.00%) 1 scenario, 10 max VUs, 2m30s max duration (incl. graceful stop):
+           * default: Up to 10 looping VUs for 2m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
 
 
-running (2m00.0s), 000/100 VUs, 515498 complete and 0 interrupted iterations
-default ✓ [======================================] 000/100 VUs  2m0s
+running (2m00.0s), 00/10 VUs, 372061 complete and 0 interrupted iterations
+default ✓ [======================================] 00/10 VUs  2m0s
      █ main index page
 
        ✓ is status 200
 
-     checks.........................: 100.00% ✓ 515498      ✗ 0     
-     data_received..................: 1.2 GB  10 MB/s
-     data_sent......................: 20 MB   168 kB/s
-     group_duration.................: avg=9.28ms   min=206.71µs med=6.03ms  max=118.51ms p(95)=29.06ms  p(99)=45.52ms p(99.99)=89.95ms count=515498
-     http_req_blocked...............: avg=3.61µs   min=107ns    med=221ns   max=65.82ms  p(95)=326ns    p(99)=427ns   p(99.99)=13.44ms count=515498
-     http_req_connecting............: avg=1.59µs   min=0s       med=0s      max=38.03ms  p(95)=0s       p(99)=0s      p(99.99)=3.46ms  count=515498
-     http_req_duration..............: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
-       { expected_response:true }...: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
-     ✓ { gzip:yes }.................: avg=9.15ms   min=162.86µs med=5.94ms  max=118.46ms p(95)=28.73ms  p(99)=44.83ms p(99.99)=88.63ms count=515498
-     http_req_failed................: 0.00%   ✓ 0           ✗ 515498
-     http_req_receiving.............: avg=3.77ms   min=9µs      med=1.73ms  max=107.19ms p(95)=14.31ms  p(99)=31.21ms p(99.99)=67.59ms count=515498
-     http_req_sending...............: avg=126.79µs min=13.99µs  med=29.29µs max=73.17ms  p(95)=185.48µs p(99)=1.7ms   p(99.99)=39.06ms count=515498
-     http_req_tls_handshaking.......: avg=1.66µs   min=0s       med=0s      max=52.81ms  p(95)=0s       p(99)=0s      p(99.99)=4.81ms  count=515498
-     http_req_waiting...............: avg=5.25ms   min=0s       med=2.39ms  max=91.08ms  p(95)=19.37ms  p(99)=26.88ms p(99.99)=51.61ms count=515498
-     http_reqs......................: 515498  4295.760443/s
-     iteration_duration.............: avg=10.14ms  min=618.59µs med=6.8ms   max=119.03ms p(95)=30.72ms  p(99)=48.28ms p(99.99)=91.41ms count=515498
-     iterations.....................: 515498  4295.760443/s
-     vus............................: 1       min=1         max=99  
-     vus_max........................: 100     min=100       max=100 Process finished (121.29 seconds)
+     checks.........................: 100.00% ✓ 372061      ✗ 0     
+     data_received..................: 881 MB  7.3 MB/s
+     data_sent......................: 15 MB   121 kB/s
+     group_duration.................: avg=716.71µs min=202.28µs med=366.9µs  max=27.68ms  p(95)=1.98ms   p(99)=7.51ms   p(99.99)=18.26ms count=372061
+     http_req_blocked...............: avg=295ns    min=109ns    med=218ns    max=3.58ms   p(95)=296ns    p(99)=338ns    p(99.99)=9.46µs  count=372061
+     http_req_connecting............: avg=5ns      min=0s       med=0s       max=871.71µs p(95)=0s       p(99)=0s       p(99.99)=0s      count=372061
+     http_req_duration..............: avg=660.38µs min=159.34µs med=309.89µs max=36.12ms  p(95)=1.9ms    p(99)=7.39ms   p(99.99)=21.27ms count=372061
+       { expected_response:true }...: avg=660.38µs min=159.34µs med=309.89µs max=36.12ms  p(95)=1.9ms    p(99)=7.39ms   p(99.99)=21.27ms count=372061
+     ✓ { gzip:yes }.................: avg=660.38µs min=159.34µs med=309.89µs max=36.12ms  p(95)=1.9ms    p(99)=7.39ms   p(99.99)=21.27ms count=372061
+     http_req_failed................: 0.00%   ✓ 0           ✗ 372061
+     http_req_receiving.............: avg=129.3µs  min=8.84µs   med=19.65µs  max=25.19ms  p(95)=699.68µs p(99)=1.29ms   p(99.99)=12.77ms count=372061
+     http_req_sending...............: avg=49.92µs  min=16.27µs  med=28.76µs  max=22.97ms  p(95)=182.66µs p(99)=248.71µs p(99.99)=11.58ms count=372061
+     http_req_tls_handshaking.......: avg=45ns     min=0s       med=0s       max=3.41ms   p(95)=0s       p(99)=0s       p(99.99)=0s      count=372061
+     http_req_waiting...............: avg=481.15µs min=0s       med=241.92µs max=27.27ms  p(95)=1.09ms   p(99)=6.73ms   p(99.99)=15.53ms count=372061
+     http_reqs......................: 372061  3100.424592/s
+     iteration_duration.............: avg=1.28ms   min=614.18µs med=901.1µs  max=33.76ms  p(95)=2.83ms   p(99)=8.93ms   p(99.99)=22.37ms count=372061
+     iterations.....................: 372061  3100.424592/s
+     vus............................: 1       min=1         max=10  
+     vus_max........................: 10      min=10        max=10  Process finished (121.11 seconds)
 ```
 
 Using `jq` to filter `summary-raw.gz` summary log for the 4 stages via the tags for each stage.
@@ -269,11 +292,17 @@ pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_du
 
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
 
+For k6 run itself
+
 ![benchmark.js](/screenshots/users/plot-user-no-sleep.png)
+
+For Nginx web server tested
+
+![nginx](/screenshots/users/plot-user-no-sleep-nginx.png)
 
 ## User Concurrency Benchmarks With Random Sleep
 
-User 25, 50, 100, 0 concurrency 4 stage benchmarks with random sleep between 1 to 5 seconds with [`psrecord`](https://github.com/astrofrog/psrecord/) in `benchmark2.js` for `export default function ()`
+User 25, 50, 100, 0 concurrency 4 stage benchmarks with random sleep between 1 to 5 seconds with [`psrecord`](https://github.com/astrofrog/psrecord/) in `benchmark2.js` for `export default function ()`.  Where `--duration $((TIME*5+30))` is the time multiple by the 4+1 stage runs + 30s defined in `benchmark2.js`
 
 ```javascript
   const sleepMin = 1;
@@ -290,23 +319,22 @@ sleep(randomIntBetween(sleepMin, sleepMax));
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-# method 1 run psrecord in background
+# gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo server-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
-psrecord $spid --include-children --interval 0.1 --duration 180 --log psrecord-user.log --plot plot-user.png &
-taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
 
-# method 2 initiated via psrecord
-psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js" --include-children --interval 0.1 --duration 180 --log psrecord-user.log --plot plot-user.png
+# run k6 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user.log --plot plot-user.png
 ```
 
 ```
 TIME=30
 DOMAIN=https://yourdomain.com/
 
-# method 2 initiated via psrecord
-psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js" --include-children --interval 0.1 --duration 180 --log psrecord-user.log --plot plot-user.png
+# run k6 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out json=summary-raw2.gz benchmark2.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user.png
 
 Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=30s -e URL=https://domain1.com/ --no-usage-report --out json=summary-raw2.gz benchmark2.js' and attaching to process
 
@@ -324,40 +352,46 @@ Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=30s -e URL=https://domai
            * default: Up to 100 looping VUs for 2m0s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
 
 
-running (2m03.8s), 000/100 VUs, 1769 complete and 0 interrupted iterations
+running (2m01.3s), 000/100 VUs, 1839 complete and 0 interrupted iterations
 default ✓ [======================================] 000/100 VUs  2m0s
      █ main index page
 
        ✓ is status 200
 
-     checks.........................: 100.00% ✓ 1769      ✗ 0    
-     data_received..................: 4.4 MB  35 kB/s
-     data_sent......................: 139 kB  1.1 kB/s
-     group_duration.................: avg=3.06s    min=1s       med=3s       max=5.01s    p(95)=5s       p(99)=5s       p(99.99)=5.01s    count=1769
-     http_req_blocked...............: avg=55.87µs  min=201ns    med=301ns    max=7.78ms   p(95)=807.56µs p(99)=882.42µs p(99.99)=7.59ms   count=1769
-     http_req_connecting............: avg=11.34µs  min=0s       med=0s       max=6.73ms   p(95)=66.46µs  p(99)=84.49µs  p(99.99)=6.6ms    count=1769
-     http_req_duration..............: avg=265.87µs min=190.27µs med=238.09µs max=9.56ms   p(95)=331.85µs p(99)=418.32µs p(99.99)=9.42ms   count=1769
-       { expected_response:true }...: avg=265.87µs min=190.27µs med=238.09µs max=9.56ms   p(95)=331.85µs p(99)=418.32µs p(99.99)=9.42ms   count=1769
-     ✓ { gzip:yes }.................: avg=265.87µs min=190.27µs med=238.09µs max=9.56ms   p(95)=331.85µs p(99)=418.32µs p(99.99)=9.42ms   count=1769
-     http_req_failed................: 0.00%   ✓ 0         ✗ 1769 
-     http_req_receiving.............: avg=26.87µs  min=11.35µs  med=21.96µs  max=271.43µs p(95)=85.08µs  p(99)=107.91µs p(99.99)=255.28µs count=1769
-     http_req_sending...............: avg=59.23µs  min=29.96µs  med=37.79µs  max=466.93µs p(95)=217.3µs  p(99)=268.22µs p(99.99)=456.12µs count=1769
-     http_req_tls_handshaking.......: avg=39.06µs  min=0s       med=0s       max=905.93µs p(95)=654.55µs p(99)=700.41µs p(99.99)=900.07µs count=1769
-     http_req_waiting...............: avg=179.76µs min=0s       med=172.86µs max=9.49ms   p(95)=228.64µs p(99)=311.14µs p(99.99)=9.34ms   count=1769
-     http_reqs......................: 1769    14.289059/s
-     iteration_duration.............: avg=3.06s    min=1s       med=3s       max=5.01s    p(95)=5s       p(99)=5s       p(99.99)=5.01s    count=1769
-     iterations.....................: 1769    14.289059/s
-     vus............................: 1       min=1       max=100
-     vus_max........................: 100     min=100     max=100Process finished (124.47 seconds)
+     checks.........................: 100.00% ✓ 1839     ✗ 0    
+     data_received..................: 4.5 MB  37 kB/s
+     data_sent......................: 142 kB  1.2 kB/s
+     group_duration.................: avg=2.94s    min=1s       med=3s       max=5.01s    p(95)=5s       p(99)=5s       p(99.99)=5.01s    count=1839
+     http_req_blocked...............: avg=62.14µs  min=199ns    med=312ns    max=10.03ms  p(95)=822.43µs p(99)=1.07ms   p(99.99)=9.88ms   count=1839
+     http_req_connecting............: avg=16.21µs  min=0s       med=0s       max=8.95ms   p(95)=70.09µs  p(99)=93.41µs  p(99.99)=8.83ms   count=1839
+     http_req_duration..............: avg=269.03µs min=188.43µs med=245.08µs max=11.23ms  p(95)=352.24µs p(99)=479.78µs p(99.99)=9.31ms   count=1839
+       { expected_response:true }...: avg=269.03µs min=188.43µs med=245.08µs max=11.23ms  p(95)=352.24µs p(99)=479.78µs p(99.99)=9.31ms   count=1839
+     ✓ { gzip:yes }.................: avg=269.03µs min=188.43µs med=245.08µs max=11.23ms  p(95)=352.24µs p(99)=479.78µs p(99.99)=9.31ms   count=1839
+     http_req_failed................: 0.00%   ✓ 0        ✗ 1839 
+     http_req_receiving.............: avg=27.11µs  min=11.11µs  med=22.3µs   max=178.46µs p(95)=39.61µs  p(99)=115.98µs p(99.99)=177.74µs count=1839
+     http_req_sending...............: avg=68.49µs  min=29.51µs  med=40.3µs   max=399.02µs p(95)=237.77µs p(99)=303.61µs p(99.99)=398.04µs count=1839
+     http_req_tls_handshaking.......: avg=40.37µs  min=0s       med=0s       max=1.22ms   p(95)=664.3µs  p(99)=843.76µs p(99.99)=1.19ms   count=1839
+     http_req_waiting...............: avg=173.42µs min=0s       med=175.37µs max=11.16ms  p(95)=239.56µs p(99)=342.52µs p(99.99)=9.24ms   count=1839
+     http_reqs......................: 1839    15.15872/s
+     iteration_duration.............: avg=2.94s    min=1s       med=3s       max=5.01s    p(95)=5s       p(99)=5s       p(99.99)=5.01s    count=1839
+     iterations.....................: 1839    15.15872/s
+     vus............................: 3       min=1      max=100
+     vus_max........................: 100     min=100    max=100Process finished (121.99 seconds)
 ```
 
 psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
 
+For k6 run itself
+
 ![benchmark2.js](/screenshots/users/plot-user.png)
+
+For Nginx web server tested
+
+![nginx](/screenshots/users/plot-user-nginx.png)
 
 # InfluxDB + Grafana
 
-Send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5))` is the time multiple by the 4+1 stage runs + 30s defined in `benchmark.js`.
+Send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5+30))` is the time multiple by the 4+1 stage runs + 30s defined in `benchmark.js`.
 
 ```
 TIME=60
@@ -365,10 +399,30 @@ DOMAIN=https://yourdomain.com/
 export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
 
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
+
+# run k6 initiated via psrecord
 psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
 ```
 ```
+IME=60
+DOMAIN=https://yourdomain.com/
+export K6_INFLUXDB_USERNAME=
+export K6_INFLUXDB_PASSWORD=
+
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
+
+# run k6 initiated via psrecord
 psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep.log --plot plot-user-no-sleep.png
+
 Starting up command 'taskset -c 0-3 k6 run -e STAGETIME=60s -e URL=https://domain1.com/ --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark.js' and attaching to process
 
           /\      |‾‾| /‾‾/   /‾‾/   
