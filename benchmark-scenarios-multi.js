@@ -15,18 +15,20 @@
 //
 // scenario 4
 // VU=50; TIME=30; STAGEVU1=25; STAGEVU2=50; STAGEVU3=100; STAGEVU4=0; DOMAIN=https://yourdomain.com/
-// taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js
+// taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js
 //
 // scenario 4 with influxdb + grafana
 // export K6_INFLUXDB_USERNAME=
 // export K6_INFLUXDB_PASSWORD=
+// export K6_INFLUXDB_PUSH_INTERVAL=2s
+// export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 // VU=50; TIME=30; STAGEVU1=25; STAGEVU2=50; STAGEVU3=100; STAGEVU4=0; DOMAIN=https://yourdomain.com/
-// taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js
+// taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js
 //
 // with psrecord
 // spid=$(cminfo service-info nginx | jq -r '.MainPID')
 // psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
-// psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+// psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
 //
 //
 import { check } from "k6";
@@ -45,7 +47,7 @@ import {
   textSummary,
 } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
-const durationInSeconds = new Trend("duration_in_seconds");
+// const durationInSeconds = new Trend("duration_in_seconds");
 
 export const options = {
   scenarios: {
@@ -56,17 +58,11 @@ export const options = {
     //   startTime: '0s',
     //   rate: `${__ENV.RPS}`,
     //   timeUnit: '1s',
-    //   duration: `${__ENV.DURATION}`,
+    //   duration: `${__ENV.STAGETIME}`,
     //   preAllocatedVUs: `${__ENV.USERS}`,
     //   maxVUs: 1000,
     //   gracefulStop:     '30s',
     //   tags: { executor: 'constant-arrival-rate' },
-    //   stages: [
-    //     { duration: `${__ENV.STAGETIME}`, target: 25 },
-    //     { duration: `${__ENV.STAGETIME}`, target: 50 },
-    //     { duration: `${__ENV.STAGETIME}`, target: 100 },
-    //     { duration: `${__ENV.STAGETIME}`, target: 0 },
-    //   ],
     // },
     // // scenario 2
     // https://k6.io/docs/using-k6/scenarios/executors/per-vu-iterations
@@ -127,9 +123,12 @@ export const options = {
     min: "tls1.2",
     max: "tls1.3",
   },
+  // https://k6.io/docs/using-k6/k6-options/reference/#system-tags
+  systemTags: ['proto', 'status', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'expected_response'],
+  // systemTags: ['proto', 'subproto', 'status', 'method', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'service', 'expected_response'],
   thresholds: {
-    'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
-    // http_req_duration: ["avg<150", "p(95)<500"],
+    // 'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
+    http_req_duration: ["avg<150", "p(95)<500"],
     // http_req_duration: ['p(90) < 200', 'p(95) < 300', 'p(99.9) < 2000'],
   },
 };
@@ -157,9 +156,9 @@ export default function () {
     },
     // cookies: { my_cookie: 'value' },
     // redirects: 5,
-    tags: { 
-      gzip: 'yes'
-    }
+    // tags: { 
+    //   gzip: 'yes'
+    // }
   };
   group('main index page', function () {
     const res = http.get(`${__ENV.URL}`, params);
@@ -167,7 +166,7 @@ export default function () {
     check(res, {
       "is status 200": (r) => r.status === 200,
     });
-    durationInSeconds.add(res.timings.duration / 1000);
+    // durationInSeconds.add(res.timings.duration / 1000);
     // sleep(1);
     // sleep(randomIntBetween(sleepMin, sleepMax));
    });

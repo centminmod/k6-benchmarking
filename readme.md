@@ -447,6 +447,8 @@ TIME=60
 DOMAIN=https://yourdomain.com/
 export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
+export K6_INFLUXDB_PUSH_INTERVAL=2s
+export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 
 # gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
@@ -462,6 +464,8 @@ IME=60
 DOMAIN=https://yourdomain.com/
 export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
+export K6_INFLUXDB_PUSH_INTERVAL=2s
+export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 
 # gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
@@ -535,6 +539,8 @@ STAGEVU4=0
 DOMAIN=https://yourdomain.com/
 export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
+export K6_INFLUXDB_PUSH_INTERVAL=2s
+export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 
 # gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
@@ -556,6 +562,8 @@ STAGEVU4=0
 DOMAIN=https://yourdomain.com/
 export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
+export K6_INFLUXDB_PUSH_INTERVAL=2s
+export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 
 # gather nginx resource usage via psrecord in background
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
