@@ -27,8 +27,8 @@
 //
 // with psrecord
 // spid=$(cminfo service-info nginx | jq -r '.MainPID')
-// psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
-// psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+// psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+// psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
 //
 //
 import { check } from "k6";
@@ -98,7 +98,7 @@ export const options = {
         { duration: `${__ENV.STAGETIME}`, target: `${__ENV.STAGE_VU3}` },
         { duration: `${__ENV.STAGETIME}`, target: `${__ENV.STAGE_VU4}` },
       ],
-      gracefulRampDown: '0s',
+      gracefulRampDown: '60s',
       gracefulStop:     '30s',
       tags: { executor: 'ramping-vus' },
     },

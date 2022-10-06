@@ -527,7 +527,7 @@ InfluxDB + Grafana
 
 # Ramping VUs
 
-Run [k6 `ramping-vus` executor](https://k6.io/docs/using-k6/scenarios/executors/ramping-vus) scenario and send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5+30))` is the time multiple by the 4+1 stage runs + 30s and variables `VU=0`, `STAGEVU1=100`, `STAGEVU2=200,` `STAGEVU3=300, and` `STAGEVU4=0` are for the four stages defined in `benchmark-scenarios-multi.js`. Here `VU=0` defines the starting VU number for ramping VUs in 4 stages from 0 to 100, 100 to 200, 200 to 300 and back down from 300 to 0.
+Run [k6 `ramping-vus` executor](https://k6.io/docs/using-k6/scenarios/executors/ramping-vus) scenario and send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5+90))` is the time multiple by the 4+1 stage runs + 30s `gracefulStop` + 60s `gracefulRampDown` and variables `VU=0`, `STAGEVU1=100`, `STAGEVU2=200,` `STAGEVU3=300, and` `STAGEVU4=0` are for the four stages defined in `benchmark-scenarios-multi.js`. Here `VU=0` defines the starting VU number for ramping VUs in 4 stages from 0 to 100, 100 to 200, 200 to 300 and back down from 300 to 0.
 
 ```
 TIME=60
@@ -546,10 +546,10 @@ export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
-psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
 
 # run k6 initiated via psrecord
-psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
 ```
 
 ```
@@ -569,10 +569,10 @@ export K6_INFLUXDB_CONCURRENT_WRITES=$(nproc)
 # get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
-psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
 
 # run k6 initiated via psrecord
-psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
 
 Starting up command 'taskset -c 0-3 k6 run -e USERS=0 -e STAGETIME=60s -e STAGE_VU1=100 -e STAGE_VU2=200 -e STAGE_VU3=300 -e STAGE_VU4=0 -e URL=https://domain1.com/ --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js' and attaching to process
 

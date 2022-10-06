@@ -12,6 +12,10 @@ STAGEVU2=50
 STAGEVU3=100
 STAGEVU4=0
 
+export K6_INFLUXDB_PUSH_INTERVAL=1.9s
+export K6_INFLUXDB_CONCURRENT_WRITES=30
+# export K6_INFLUXDB_USERNAME=
+# export K6_INFLUXDB_PASSWORD=
 ###############################################################################
 
 start_test() {
@@ -33,13 +37,9 @@ run_test() {
   DOMAIN="$2"
   start_test
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
-  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
   if [[ "$INFLUXDB" = [yY] ]]; then
-    # export K6_INFLUXDB_USERNAME=
-    # export K6_INFLUXDB_PASSWORD=
-    export K6_INFLUXDB_PUSH_INTERVAL=2s
-    export K6_INFLUXDB_CONCURRENT_WRITES=14
-    psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+    psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
   else
     taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js
   fi
