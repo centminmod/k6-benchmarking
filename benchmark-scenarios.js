@@ -16,6 +16,18 @@
 // TIME=30; STAGEVU1=25; STAGEVU2=50; STAGEVU3=100; STAGEVU4=0; DOMAIN=https://yourdomain.com/
 // taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios.gz benchmark-scenarios.js
 //
+// scenario 4 with influxdb + grafana
+// export K6_INFLUXDB_USERNAME=
+// export K6_INFLUXDB_PASSWORD=
+// TIME=30; STAGEVU1=25; STAGEVU2=50; STAGEVU3=100; STAGEVU4=0; DOMAIN=https://yourdomain.com/
+// taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios.js
+//
+// with psrecord
+// spid=$(cminfo service-info nginx | jq -r '.MainPID')
+// psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+// psrecord "taskset -c 0-3 k6 run -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+//
+//
 import { check } from "k6";
 import { group } from 'k6';
 import { sleep } from "k6";
