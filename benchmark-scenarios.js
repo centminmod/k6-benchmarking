@@ -133,7 +133,7 @@ export const options = {
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: " ", enableColors: true }),
-    "summary.json": JSON.stringify(data),
+    "summary-scenarios.json": JSON.stringify(data),
   };
 }
 

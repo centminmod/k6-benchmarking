@@ -136,7 +136,7 @@ export function handleSummary(data) {
   return {
     "result-scenarios.html": htmlReport(data),
     stdout: textSummary(data, { indent: " ", enableColors: true }),
-    "summary.json": JSON.stringify(data),
+    "summary-scenarios-htmlreport.json": JSON.stringify(data),
   };
 }
 
