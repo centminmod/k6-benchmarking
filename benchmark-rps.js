@@ -9,10 +9,10 @@ import { group } from 'k6';
 import { sleep } from "k6";
 import http from "k6/http";
 import exec from "k6/execution";
-import { tagWithCurrentStageIndex } from "https://jslib.k6.io/k6-utils/1.3.0/index.js";
-import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.1.0/index.js";
+import { tagWithCurrentStageIndex } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
+import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
 // https://k6.io/docs/javascript-api/jslib/utils/randomstring/
-//import { randomString } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
+//import { randomString } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import {
   jUnit,
   textSummary,
