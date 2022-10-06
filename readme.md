@@ -6,6 +6,7 @@
   * [User Concurrency Benchmarks Without Random Sleep](#user-concurrency-benchmarks-without-random-sleep)
   * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
 * [InfluxDB + Grafana](#influxdb--grafana)
+  * [Ramping VUs](#ramping-vus)
 
 # Install
 
@@ -471,3 +472,117 @@ InfluxDB + Grafana
 ![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-01.png)
 
 ![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-02.png)
+
+# Ramping VUs
+
+Run [k6 `ramping-vus` executor](https://k6.io/docs/using-k6/scenarios/executors/ramping-vus) scenario and send results to InfluxDB database using `--out influxdb=http://localhost:8186/k6` where `--duration $((TIME*5+30))` is the time multiple by the 4+1 stage runs + 30s and variables `VU=0`, `STAGEVU1=100`, `STAGEVU2=200,` `STAGEVU3=300, and` `STAGEVU4=0` are for the four stages defined in `benchmark-scenarios-multi.js`. Here `VU=0` defines the starting VU number for ramping VUs in 4 stages from 0 to 100, 100 to 200, 200 to 300 and back down from 300 to 0.
+
+```
+TIME=60
+VU=0
+STAGEVU1=100
+STAGEVU2=200
+STAGEVU3=300
+STAGEVU4=0
+DOMAIN=https://yourdomain.com/
+export K6_INFLUXDB_USERNAME=
+export K6_INFLUXDB_PASSWORD=
+
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+
+# run k6 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+```
+
+```
+TIME=60
+VU=0
+STAGEVU1=100
+STAGEVU2=200
+STAGEVU3=300
+STAGEVU4=0
+DOMAIN=https://yourdomain.com/
+export K6_INFLUXDB_USERNAME=
+export K6_INFLUXDB_PASSWORD=
+
+# gather nginx resource usage via psrecord in background
+# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+spid=$(cminfo service-info nginx | jq -r '.MainPID')
+# set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
+psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+
+# run k6 initiated via psrecord
+psrecord "taskset -c 0-3 k6 run -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+
+Starting up command 'taskset -c 0-3 k6 run -e USERS=0 -e STAGETIME=60s -e STAGE_VU1=100 -e STAGE_VU2=200 -e STAGE_VU3=300 -e STAGE_VU4=0 -e URL=https://domain1.com/ --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js' and attaching to process
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+  execution: local
+     script: benchmark-scenarios-multi.js
+     output: InfluxDBv1 (http://localhost:8186)
+
+  scenarios: (100.00%) 1 scenario, 300 max VUs, 4m0s max duration (incl. graceful stop):
+           * ramping_vus: Up to 300 looping VUs for 4m0s over 4 stages (gracefulRampDown: 0s, gracefulStop: 30s)
+
+
+running (4m00.0s), 000/300 VUs, 861620 complete and 300 interrupted iterations
+ramping_vus ✓ [======================================] 001/300 VUs  4m0s
+INFO[0242] [k6-reporter v2.3.0] Generating HTML summary report  source=console
+     █ main index page
+
+       ✓ is status 200
+
+     checks.........................: 100.00% ✓ 861623      ✗ 0     
+     data_received..................: 2.0 GB  8.5 MB/s
+     data_sent......................: 34 MB   141 kB/s
+     duration_in_seconds............: avg=0.037306 min=0.000168 med=0.03206 max=0.469338 p(95)=0.09501  p(99)=0.131728 p(99.99)=0.231943 count=861621
+     group_duration.................: avg=40.02ms  min=218.47µs med=33.4ms  max=469.43ms p(95)=103.61ms p(99)=160.33ms p(99.99)=342.84ms count=861620
+     http_req_blocked...............: avg=20.5µs   min=113ns    med=250ns   max=206.61ms p(95)=367ns    p(99)=510ns    p(99.99)=76.69ms  count=861630
+     http_req_connecting............: avg=10.14µs  min=0s       med=0s      max=113.78ms p(95)=0s       p(99)=0s       p(99.99)=37.89ms  count=861630
+     http_req_duration..............: avg=37.3ms   min=168.32µs med=32.05ms max=469.33ms p(95)=95.01ms  p(99)=131.72ms p(99.99)=231.94ms count=861630
+       { expected_response:true }...: avg=37.3ms   min=168.32µs med=32.05ms max=469.33ms p(95)=95.01ms  p(99)=131.72ms p(99.99)=231.94ms count=861630
+     ✓ { gzip:yes }.................: avg=37.3ms   min=168.32µs med=32.05ms max=469.33ms p(95)=95.01ms  p(99)=131.72ms p(99.99)=231.94ms count=861630
+     http_req_failed................: 0.00%   ✓ 0           ✗ 861630
+     http_req_receiving.............: avg=10.92ms  min=7.93µs   med=6.63ms  max=206.57ms p(95)=34.43ms  p(99)=61.85ms  p(99.99)=162.57ms count=861630
+     http_req_sending...............: avg=306.4µs  min=18.73µs  med=31.84µs max=387.88ms p(95)=110.79µs p(99)=8.35ms   p(99.99)=96.93ms  count=861630
+     http_req_tls_handshaking.......: avg=9.98µs   min=0s       med=0s      max=163.72ms p(95)=0s       p(99)=0s       p(99.99)=37.37ms  count=861630
+     http_req_waiting...............: avg=26.07ms  min=0s       med=23.15ms max=219.88ms p(95)=66.75ms  p(99)=91.05ms  p(99.99)=158.73ms count=861630
+     http_reqs......................: 861630  3590.086802/s
+     iteration_duration.............: avg=41.56ms  min=612.03µs med=34.47ms max=592.75ms p(95)=106.55ms p(99)=167.67ms p(99.99)=403.28ms count=861620
+     iterations.....................: 861620  3590.045135/s
+     vus............................: 1       min=1         max=299 
+     vus_max........................: 300     min=300       max=300 Process finished (242.16 seconds)
+```
+
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+
+For k6 run itself
+
+![benchmark2.js](/screenshots/scenarios/plot-ramping-vus.png)
+
+For Nginx web server tested
+
+![nginx](/screenshots/scenarios/plot-ramping-vus-nginx.png)
+
+The recorded results in InfluxDB Grafana instance
+
+![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-ramping-vus-01.png)
+
+![InfluxDB + Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-ramping-vus-02.png)
+
+k6 HTML report generated via forked [k6 reporter](https://github.com/centminmod/k6-reporter/tree/cmm)
+
+The recorded results in InfluxDB Grafana instance
+
+![k6 HTML report](/screenshots/influxdb-grafana/k6-influxdb-grafana-ramping-vus-htmlreport-01.png)
+
+![k6 HTML report](/screenshots/influxdb-grafana/k6-influxdb-grafana-ramping-vus-htmlreport-02.png)
