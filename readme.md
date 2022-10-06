@@ -96,7 +96,55 @@ optional arguments:
 
 ## Constant Request Rate Benchmarks
 
-For REQRATE = 100 request/s constant rate test with [`psrecord`](https://github.com/astrofrog/psrecord/).   Where `--duration $((TIME+30))` is the `TIME` + 30s defined in `benchmark-rps.js`
+For REQRATE = 100 request/s constant rate test with [`psrecord`](https://github.com/astrofrog/psrecord/).   Where `--duration $((TIME+30))` is the `TIME` + 30s defined in `benchmark-rps.js`. 
+
+The `spid` variable is for Nginx web server's `MainPID` via Centmin Mod cminfo service-info tool.
+
+```json
+cminfo service-info nginx
+{
+  "Names": "nginx.service",
+  "Description": "Centmin Mod NGINX Server",
+  "Type": "forking",
+  "ActiveState": "active",
+  "LoadState": "loaded",
+  "SubState": "running",
+  "Result": "success",
+  "ExecMainStartTimestamp": "Thu 2022-10-06 12:59:35 UTC",
+  "MainPID": "28166",
+  "DropInPaths": "/etc/systemd/system/nginx.service.d/failure-restart.conf /etc/systemd/system/nginx.service.d/mimalloc.conf /etc/systemd/system/nginx.service.d/openfileslimit.conf",
+  "ExecStart": "{ path=/usr/local/sbin/nginx ; argv[]=/usr/local/sbin/nginx -c /usr/local/nginx/conf/nginx.conf ; ignore_errors=no ; start_time=[Thu 2022-10-06 12:59:35 UTC] ; stop_time=[Thu 2022-10-06 12:59:35 UTC] ; pid=28162 ; code=exited ; status=0 }",
+  "ExecStartPre": "{ path=/usr/local/sbin/nginx ; argv[]=/usr/local/sbin/nginx -t ; ignore_errors=no ; start_time=[Thu 2022-10-06 12:59:34 UTC] ; stop_time=[Thu 2022-10-06 12:59:35 UTC] ; pid=28158 ; code=exited ; status=0 }",
+  "ExecReload": "{ path=/bin/sh ; argv[]=/bin/sh -c /bin/kill -s HUP $(/bin/cat /usr/local/nginx/logs/nginx.pid) ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+  "ExecStop": "{ path=/bin/sh ; argv[]=/bin/sh -c /bin/kill -s TERM $(/bin/cat /usr/local/nginx/logs/nginx.pid) ; ignore_errors=no ; start_time=[Thu 2022-10-06 12:59:34 UTC] ; stop_time=[Thu 2022-10-06 12:59:34 UTC] ; pid=28152 ; code=exited ; status=0 }",
+  "PIDFile": "/usr/local/nginx/logs/nginx.pid",
+  "LimitMEMLOCK": "65536",
+  "LimitNOFILE": "1048576",
+  "LimitNPROC": "127803",
+  "After": "nss-lookup.target network-online.target remote-fs.target systemd-journald.socket basic.target system.slice syslog.target",
+  "Before": "multi-user.target shutdown.target",
+  "Conflicts": "shutdown.target",
+  "FailureAction": "none",
+  "FragmentPath": "/usr/lib/systemd/system/nginx.service",
+  "NotifyAccess": "none",
+  "PrivateNetwork": "no",
+  "PrivateTmp": "no",
+  "ProtectHome": "no",
+  "ProtectSystem": "no",
+  "Requires": "basic.target system.slice",
+  "Restart": "on-failure",
+  "RestartUSec": "5s",
+  "StartLimitAction": "none",
+  "StartLimitBurst": "5",
+  "StartLimitInterval": "30000000",
+  "TimeoutStartUSec": "1min 30s",
+  "TimeoutStopUSec": "1min 30s",
+  "UnitFilePreset": "disabled",
+  "UnitFileState": "enabled",
+  "WantedBy": "multi-user.target",
+  "Wants": "network-online.target"
+}
+```
 
 ```
 VU=20
@@ -105,7 +153,7 @@ TIME=30
 DOMAIN=https://yourdomain.com/
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord-rps-nginx.log --plot plot-rps-nginx.png &
@@ -119,7 +167,7 @@ TIME=30
 DOMAIN=https://yourdomain.com/
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME+30)) --log psrecord-rps-nginx.log --plot plot-rps-nginx.png &
@@ -188,7 +236,7 @@ TIME=30
 DOMAIN=https://yourdomain.com/
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep-nginx.log --plot plot-user-no-sleep-nginx.png &
@@ -202,7 +250,7 @@ TIME=30
 DOMAIN=https://yourdomain.com/
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-no-sleep-nginx.log --plot plot-user-no-sleep-nginx.png &
@@ -321,7 +369,7 @@ TIME=30
 DOMAIN=https://yourdomain.com/
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
@@ -401,7 +449,7 @@ export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
@@ -416,7 +464,7 @@ export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-user-nginx.log --plot plot-user-nginx.png &
@@ -489,7 +537,7 @@ export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
@@ -510,7 +558,7 @@ export K6_INFLUXDB_USERNAME=
 export K6_INFLUXDB_PASSWORD=
 
 # gather nginx resource usage via psrecord in background
-# get Nginx MainPID value using Centmin Mod cminfo server-info tool
+# get Nginx MainPID value using Centmin Mod cminfo service-info tool
 spid=$(cminfo service-info nginx | jq -r '.MainPID')
 # set duration to 180 seconds as benchmark2.js uses 4x 30s stages + 30s = 2 1/2 min run time
 psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+30)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
