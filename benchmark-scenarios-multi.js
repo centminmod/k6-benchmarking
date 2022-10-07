@@ -27,8 +27,8 @@
 //
 // with psrecord
 // spid=$(cminfo service-info nginx | jq -r '.MainPID')
-// psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
-// psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+// psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+// psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
 //
 //
 import { check } from "k6";
@@ -100,7 +100,7 @@ export const options = {
       ],
       gracefulRampDown: '60s',
       gracefulStop:     '30s',
-      tags: { executor: 'ramping-vus' },
+      // tags: { executor: 'ramping-vus' },
     },
   },
   // httpDebug: 'full',
@@ -124,13 +124,14 @@ export const options = {
     max: "tls1.3",
   },
   // https://k6.io/docs/using-k6/k6-options/reference/#system-tags
-  systemTags: ['proto', 'status', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'expected_response'],
+  // systemTags: ['proto', 'status', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'expected_response'],
+  systemTags: [ 'status', 'name', 'check', 'error', 'error_code', 'scenario', 'expected_response', 'iter', 'vu'],
   // systemTags: ['proto', 'subproto', 'status', 'method', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'service', 'expected_response'],
-  thresholds: {
+  // thresholds: {
     // 'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
-    http_req_duration: ["avg<150", "p(95)<500"],
+    // http_req_duration: ["avg<1000", "p(95)<1500"],
     // http_req_duration: ['p(90) < 200', 'p(95) < 300', 'p(99.9) < 2000'],
-  },
+  // },
 };
 
 export function handleSummary(data) {
@@ -160,14 +161,12 @@ export default function () {
     //   gzip: 'yes'
     // }
   };
-  group('main index page', function () {
-    const res = http.get(`${__ENV.URL}`, params);
-    // console.log('Response time was ' + String(res.timings.duration) + ' ms');
-    check(res, {
-      "is status 200": (r) => r.status === 200,
-    });
-    // durationInSeconds.add(res.timings.duration / 1000);
-    // sleep(1);
-    // sleep(randomIntBetween(sleepMin, sleepMax));
-   });
+  const res = http.get(`${__ENV.URL}`, params);
+  // console.log('Response time was ' + String(res.timings.duration) + ' ms');
+  check(res, {
+    "is status 200": (r) => r.status === 200,
+  });
+  // durationInSeconds.add(res.timings.duration / 1000);
+  // sleep(1);
+  // sleep(randomIntBetween(sleepMin, sleepMax));
 }

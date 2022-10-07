@@ -5,15 +5,49 @@
 ###############################################################################
 # starting VU count
 VU=0
-TIME=5
+TIME=15
 REQRATE=1
-STAGEVU1=25
-STAGEVU2=50
-STAGEVU3=100
+STAGEVU1=10
+STAGEVU2=15
+STAGEVU3=20
 STAGEVU4=0
+VERBOSE='n'
 
-export K6_INFLUXDB_PUSH_INTERVAL=1.9s
-export K6_INFLUXDB_CONCURRENT_WRITES=30
+# 4 CPUS = 0-3
+# 2 CPUS = 0-1
+TASKSET_CPUS='0-3'
+###############################################################################
+if [[ "$VERBOSE" = [yY] ]]; then
+  VOPT=' -v'
+else
+  VOPT=""
+fi
+if [[ "$STAGEVU3" -le '599' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.2s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=100
+elif [[ "$STAGEVU3" -ge '600' && "$STAGEVU3" -le '899' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.9s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=200
+elif [[ "$STAGEVU3" -ge '900' && "$STAGEVU3" -le '1199' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.9s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=600
+elif [[ "$STAGEVU3" -ge '1200' && "$STAGEVU3" -le '1499' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=2.9s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=1000
+elif [[ "$STAGEVU3" -ge '1500' && "$STAGEVU3" -le '1799' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=4.7s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=2400
+elif [[ "$STAGEVU3" -ge '1800' && "$STAGEVU3" -le '1999' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=6.1s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=4800
+elif [[ "$STAGEVU3" -ge '2000' && "$STAGEVU3" -le '2199' ]]; then
+  K6_INFLUXDB_PUSH_INTERVAL_OPT=7.5s
+  K6_INFLUXDB_CONCURRENT_WRITES_OPT=16000
+fi
+export K6_INFLUXDB_PUSH_INTERVAL="$K6_INFLUXDB_PUSH_INTERVAL_OPT"
+export K6_INFLUXDB_CONCURRENT_WRITES="$K6_INFLUXDB_CONCURRENT_WRITES_OPT"
+export K6_INFLUXDB_PAYLOAD_SIZE=100000
+export K6_INFLUXDB_TAGS_AS_FIELDS=vu,tls_version,url,group,protocol
 # export K6_INFLUXDB_USERNAME=
 # export K6_INFLUXDB_PASSWORD=
 ###############################################################################
@@ -37,11 +71,15 @@ run_test() {
   DOMAIN="$2"
   start_test
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
-  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus-nginx.log --plot plot-ramping-vus-nginx.png &
+  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
+  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &
+  echo
   if [[ "$INFLUXDB" = [yY] ]]; then
-    psrecord "taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+90)) --log psrecord-ramping-vus.log --plot plot-ramping-vus.png
+    echo "psrecord \"taskset -c ${TASKSET_CPUS} k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png"
+    psrecord "taskset -c ${TASKSET_CPUS} k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png
   else
-    taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js
+    echo "taskset -c ${TASKSET_CPUS} k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js"
+    taskset -c ${TASKSET_CPUS} k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out json=summary-raw-scenarios-multi.gz benchmark-scenarios-multi.js
   fi
   end_test
 }
