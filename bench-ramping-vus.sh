@@ -5,11 +5,11 @@
 ###############################################################################
 # starting VU count
 VU=0
-TIME=15
+TIME=30
 REQRATE=1
-STAGEVU1=10
-STAGEVU2=15
-STAGEVU3=20
+STAGEVU1=25
+STAGEVU2=50
+STAGEVU3=100
 STAGEVU4=0
 VERBOSE='n'
 
@@ -22,30 +22,33 @@ if [[ "$VERBOSE" = [yY] ]]; then
 else
   VOPT=""
 fi
-if [[ "$STAGEVU3" -le '599' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.2s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=100
+if [[ "$STAGEVU3" -le '299' ]]; then
+  INFLUXDB_PUSH_INTERVAL_OPT=1.5s
+  INFLUXDB_CONCURRENT_WRITES_OPT=80
+elif [[ "$STAGEVU3" -ge '300' && "$STAGEVU3" -le '599' ]]; then
+  INFLUXDB_PUSH_INTERVAL_OPT=1.5s
+  INFLUXDB_CONCURRENT_WRITES_OPT=100
 elif [[ "$STAGEVU3" -ge '600' && "$STAGEVU3" -le '899' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.9s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=200
+  INFLUXDB_PUSH_INTERVAL_OPT=1.9s
+  INFLUXDB_CONCURRENT_WRITES_OPT=200
 elif [[ "$STAGEVU3" -ge '900' && "$STAGEVU3" -le '1199' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=1.9s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=600
+  INFLUXDB_PUSH_INTERVAL_OPT=1.9s
+  INFLUXDB_CONCURRENT_WRITES_OPT=600
 elif [[ "$STAGEVU3" -ge '1200' && "$STAGEVU3" -le '1499' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=2.9s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=1000
+  INFLUXDB_PUSH_INTERVAL_OPT=2.9s
+  INFLUXDB_CONCURRENT_WRITES_OPT=1000
 elif [[ "$STAGEVU3" -ge '1500' && "$STAGEVU3" -le '1799' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=4.7s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=2400
+  INFLUXDB_PUSH_INTERVAL_OPT=4.7s
+  INFLUXDB_CONCURRENT_WRITES_OPT=2400
 elif [[ "$STAGEVU3" -ge '1800' && "$STAGEVU3" -le '1999' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=6.1s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=4800
+  INFLUXDB_PUSH_INTERVAL_OPT=6.1s
+  INFLUXDB_CONCURRENT_WRITES_OPT=4800
 elif [[ "$STAGEVU3" -ge '2000' && "$STAGEVU3" -le '2199' ]]; then
-  K6_INFLUXDB_PUSH_INTERVAL_OPT=7.5s
-  K6_INFLUXDB_CONCURRENT_WRITES_OPT=16000
+  INFLUXDB_PUSH_INTERVAL_OPT=7.5s
+  INFLUXDB_CONCURRENT_WRITES_OPT=16000
 fi
-export K6_INFLUXDB_PUSH_INTERVAL="$K6_INFLUXDB_PUSH_INTERVAL_OPT"
-export K6_INFLUXDB_CONCURRENT_WRITES="$K6_INFLUXDB_CONCURRENT_WRITES_OPT"
+export K6_INFLUXDB_PUSH_INTERVAL="$INFLUXDB_PUSH_INTERVAL_OPT"
+export K6_INFLUXDB_CONCURRENT_WRITES="$INFLUXDB_CONCURRENT_WRITES_OPT"
 export K6_INFLUXDB_PAYLOAD_SIZE=100000
 export K6_INFLUXDB_TAGS_AS_FIELDS=vu,tls_version,url,group,protocol
 # export K6_INFLUXDB_USERNAME=
@@ -69,6 +72,20 @@ end_test() {
 run_test() {
   INFLUXDB="$1"
   DOMAIN="$2"
+  INPUT_TIME="$3"
+  INPUT_STAGEVUS="$4"
+
+  if [ -n "$INPUT_TIME" ]; then
+    TIME="$INPUT_TIME"
+  fi
+  if [ -n "$INPUT_STAGEVUS" ]; then
+    STAGEVU_ARRAY=($(echo "$INPUT_STAGEVUS"| sed 's|,| |g'))
+    STAGEVU1="${STAGEVU_ARRAY[0]}"
+    STAGEVU2="${STAGEVU_ARRAY[1]}"
+    STAGEVU3="${STAGEVU_ARRAY[2]}"
+    STAGEVU4="${STAGEVU_ARRAY[3]}"
+  fi
+
   start_test
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
   echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
@@ -90,19 +107,21 @@ help() {
   echo
   echo "$0 run-local https://domain.com"
   echo "$0 run-influxdb https://domain.com"
+  echo "$0 run-local https://domain.com TIME 25,50,100,0"
+  echo "$0 run-influxdb https://domain.com TIME 25,50,100,0"
 }
 
 case "$1" in
   run-local )
     if [ -n "$2" ]; then
-      run_test n "$2"
+      run_test n "$2" "$3" "$4"
     else
       help
     fi
     ;;
   run-influxdb )
     if [ -n "$2" ]; then
-      run_test y "$2"
+      run_test y "$2" "$3" "$4"
     else
       help
     fi
