@@ -125,7 +125,7 @@ export const options = {
   },
   // https://k6.io/docs/using-k6/k6-options/reference/#system-tags
   // systemTags: ['proto', 'status', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'expected_response'],
-  systemTags: [ 'status', 'name', 'check', 'error', 'error_code', 'scenario', 'expected_response', 'iter', 'vu'],
+  systemTags: [ 'status', 'name', 'check', 'error', 'error_code', 'scenario', 'expected_response', 'vu'],
   // systemTags: ['proto', 'subproto', 'status', 'method', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'service', 'expected_response'],
   // thresholds: {
     // 'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
