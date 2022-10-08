@@ -92,6 +92,17 @@ optional arguments:
                         slower maximum sampling rate).
 ```
 
+Add a [`psrecord-to-json.sh`](https://github.com/centminmod/k6-benchmarking/blob/master/tools/psrecord-to-json.md) tool to allow converting psrecord cpu and memory data into JSON and InfluxDB data formats.
+
+```
+./psrecord-to-json.sh 
+
+Usage:
+
+./psrecord-to-json.sh json psrecord_file.log
+./psrecord-to-json.sh influx psrecord_file.log
+```
+
 # Benchmarks
 
 ## Constant Request Rate Benchmarks
