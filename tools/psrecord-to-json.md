@@ -26,13 +26,15 @@ Usage:
 
 Influx converted data files as per https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file
 
+Reports the number of data entry lines as well.
+
 ```
 ./psrecord-to-json.sh influx psrecord-ramping-100vus-nginx.log
 
 Saved InfluxDB formatted data files at:
-cpuload: cpuload.txt
-realmem: realmem.txt
-virtualmem: virtualmem.txt
+cpuload: cpuload.txt (1543)
+realmem: realmem.txt (1543)
+virtualmem: virtualmem.txt (1543)
 ```
 
 These files will be inserted into InfluxDB database `psrecord` via:

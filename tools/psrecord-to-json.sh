@@ -32,11 +32,14 @@ converter() {
     echo "$jsondata_cpu" > cpuload.txt
     echo "$jsondata_rmem" > realmem.txt
     echo "$jsondata_vmem" > virtualmem.txt
+    count_cpu=$(cat cpuload.txt|wc -l)
+    count_rmem=$(cat realmem.txt|wc -l)
+    count_vmem=$(cat virtualmem.txt|wc -l)
     echo
-    echo "Saved influxDB formatted data files at:"
-    echo "cpuload: cpuload.txt"
-    echo "realmem: realmem.txt"
-    echo "virtualmem: virtualmem.txt"
+    echo "Saved InfluxDB formatted data files at:"
+    echo "cpuload: cpuload.txt ($count_cpu)"
+    echo "realmem: realmem.txt ($count_rmem)"
+    echo "virtualmem: virtualmem.txt ($count_vmem)"
   fi
 }
 
