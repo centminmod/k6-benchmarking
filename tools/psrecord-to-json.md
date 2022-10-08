@@ -35,6 +35,13 @@ Saved InfluxDB formatted data files at:
 cpuload: cpuload.txt (1543)
 realmem: realmem.txt (1543)
 virtualmem: virtualmem.txt (1543)
+
+InfluxDB import queries
+
+curl -i -XPOST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
 ```
 
 These files will be inserted into InfluxDB database `psrecord` via:
@@ -44,6 +51,42 @@ curl -i -XPOST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE p
 curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
 curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
 curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
+```
+
+InfluxDB optimal batch size for insertion is 5000 entries. So script will auto split files at 5000 lines
+
+```
+./psrecord-to-json.sh influx psrecord-ramping-100vus-nginx.log
+
+Saved InfluxDB formatted data files at:
+cpuload: cpuload-split-ab (5000)
+cpuload: cpuload-split-aa (5000)
+cpuload: cpuload-split-ac (5000)
+cpuload: cpuload-split-ad (430)
+realmem: realmem.txt (5000)
+realmem: realmem.txt (430)
+realmem: realmem.txt (5000)
+realmem: realmem.txt (5000)
+virtualmem: virtualmem.txt (5000)
+virtualmem: virtualmem.txt (5000)
+virtualmem: virtualmem.txt (430)
+virtualmem: virtualmem.txt (5000)
+
+InfluxDB import queries
+
+curl -i -XPOST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload-split-aa
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload-split-ab
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload-split-ac
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload-split-ad
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem-split-aa
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem-split-ab
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem-split-ac
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem-split-ad
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem-split-aa
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem-split-ab
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem-split-ac
+curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem-split-ad
 ```
 
 Sample contents from InfluxDB formatted data files

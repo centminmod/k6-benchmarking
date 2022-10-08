@@ -3,6 +3,9 @@
 # convert psrecord activity files to json format for use with influxdb
 # https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file
 ###############################################################################
+# break to 5000 size batches for InfluxDB
+SPLITSIZE='5000'
+###############################################################################
 if [ ! -f /usr/bin/jq ]; then
   yum -y -q install jq
 fi
@@ -35,11 +38,50 @@ converter() {
     count_cpu=$(cat cpuload.txt|wc -l)
     count_rmem=$(cat realmem.txt|wc -l)
     count_vmem=$(cat virtualmem.txt|wc -l)
-    echo
-    echo "Saved InfluxDB formatted data files at:"
-    echo "cpuload: cpuload.txt ($count_cpu)"
-    echo "realmem: realmem.txt ($count_rmem)"
-    echo "virtualmem: virtualmem.txt ($count_vmem)"
+    # optimize for influxdb 5000 batch size
+    if [[ "$count_cpu" -gt "$SPLITSIZE" ]]; then
+      split -l "$SPLITSIZE" cpuload.txt cpuload-split-
+      split -l "$SPLITSIZE" realmem.txt realmem-split-
+      split -l "$SPLITSIZE" virtualmem.txt virtualmem-split-
+      echo
+      echo "Saved InfluxDB formatted data files at:"
+      find . -type f -name "cpuload-split-*" | while read f; do
+        fn=$(basename $f)
+        count_cpu=$(cat $fn|wc -l)
+        echo "cpuload: $fn ($count_cpu)"
+      done
+      find . -type f -name "realmem-split-*" | while read f; do
+        fn=$(basename $f)
+        count_rmem=$(cat $fn|wc -l)
+        echo "realmem: realmem.txt ($count_rmem)"
+      done
+      find . -type f -name "virtualmem-split-*" | while read f; do
+        fn=$(basename $f)
+        count_vmem=$(cat $fn|wc -l)
+        echo "virtualmem: virtualmem.txt ($count_vmem)"
+      done
+      echo
+      echo "InfluxDB import queries"
+      echo
+      echo "curl -i -XPOST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      find . -type f -name "*-split-*" | sort | while read f; do
+        fn=$(basename $f)
+        echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
+      done
+    else
+      echo
+      echo "Saved InfluxDB formatted data files at:"
+      echo "cpuload: cpuload.txt ($count_cpu)"
+      echo "realmem: realmem.txt ($count_rmem)"
+      echo "virtualmem: virtualmem.txt ($count_vmem)"
+      echo
+      echo "InfluxDB import queries"
+      echo
+      echo "curl -i -XPOST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
+      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
+      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
+    fi
   fi
 }
 
