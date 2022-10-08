@@ -53,12 +53,12 @@ converter() {
       find . -type f -name "realmem-split-*" | while read f; do
         fn=$(basename $f)
         count_rmem=$(cat $fn|wc -l)
-        echo "realmem: realmem.txt ($count_rmem)"
+        echo "realmem: $fn ($count_rmem)"
       done
       find . -type f -name "virtualmem-split-*" | while read f; do
         fn=$(basename $f)
         count_vmem=$(cat $fn|wc -l)
-        echo "virtualmem: virtualmem.txt ($count_vmem)"
+        echo "virtualmem: $fn ($count_vmem)"
       done
       echo
       echo "InfluxDB import queries"
