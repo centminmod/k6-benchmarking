@@ -52,8 +52,20 @@ start_test() {
   sleep 10
 }
 
+parse_psrecord() {
+  input_psrecord_file="$1"
+  echo
+  echo
+  echo "     parsing and converting nginx psrecord data..."
+  echo "     waiting for psrecord to close its log..."
+  sleep 102
+  ./tools/psrecord-to-json.sh influx $input_psrecord_file
+}
+
 end_test() {
+  psrecord_file="$1"
   sysctl -w net.ipv4.tcp_tw_reuse=0 >/dev/null 2>&1
+  parse_psrecord "$psrecord_file"
   echo
   echo "k6 test completed"
 }
@@ -115,7 +127,7 @@ run_test() {
     echo "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
     ${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
-  end_test
+  end_test "psrecord-ramping-${STAGEVU3}vus-nginx.log"
 }
 
 help() {
