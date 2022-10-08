@@ -228,7 +228,7 @@ open_model ✓ [======================================] 0000/0020 VUs  30s  100.
      vus_max........................: 20      min=20      max=20Process finished (33.45 seconds)
 ```
 
-psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server. Update: now I've figured out how to [insert the psrecord data into InfluxDB to be displayed via Grafana](https://github.com/centminmod/k6-benchmarking/blob/master/tools/psrecord-to-json.md#psrecord-influxdb--grafana) as well.
 
 For k6 run itself
 
@@ -350,7 +350,7 @@ To max the value for `http_req_duration` entries that have status >= 200
 pzcat summary-raw.gz | jq '. | select(.type=="Point" and .metric == "http_req_duration" and .data.tags.status >= "200") | .data.value' | jq -s max
 ```
 
-psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server. Update: now I've figured out how to [insert the psrecord data into InfluxDB to be displayed via Grafana](https://github.com/centminmod/k6-benchmarking/blob/master/tools/psrecord-to-json.md#psrecord-influxdb--grafana) as well.
 
 For k6 run itself
 
@@ -439,7 +439,7 @@ default ✓ [======================================] 000/100 VUs  2m0s
      vus_max........................: 100     min=100    max=100Process finished (121.99 seconds)
 ```
 
-psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server. Update: now I've figured out how to [insert the psrecord data into InfluxDB to be displayed via Grafana](https://github.com/centminmod/k6-benchmarking/blob/master/tools/psrecord-to-json.md#psrecord-influxdb--grafana) as well.
 
 For k6 run itself
 
@@ -630,7 +630,7 @@ INFO[0242] [k6-reporter v2.3.0] Generating HTML summary report  source=console
      vus_max........................: 300     min=300       max=300 Process finished (242.16 seconds)
 ```
 
-psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server.
+psrecord recorded cpu and memory usage on 4x core/8x thread Intel i7 4790K server. Update: now I've figured out how to [insert the psrecord data into InfluxDB to be displayed via Grafana](https://github.com/centminmod/k6-benchmarking/blob/master/tools/psrecord-to-json.md#psrecord-influxdb--grafana) as well.
 
 For k6 run itself
 
