@@ -22,15 +22,15 @@ converter() {
     # nanoseconds of file last access
     file_start_timestamp=$(date -d @$(stat --format='%Z' $file) +%s%N)
     jsondata=$(cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]')
-    jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,domain=domain1.com value=\(.cpuload) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
-    jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,domain=domain1.com value=\(.realmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
-    jsondata_vmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, virtualmem: .virtualmem}' | jq --arg t "$file_start_timestamp" -r '"cpuload,domain=domain1.com value=\(.virtualmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
+    jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,app=nginx value=\(.cpuload) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
+    jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,app=nginx value=\(.realmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
+    jsondata_vmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, virtualmem: .virtualmem}' | jq --arg t "$file_start_timestamp" -r '"virtualmem,app=nginx value=\(.virtualmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
 
     # save influxdb formatted data files to be inserted via
-    # curl -i -XPOST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
-    # curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
-    # curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
-    # curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
+    # curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+    # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
+    # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
+    # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
 
     echo "$jsondata_cpu" > cpuload.txt
     echo "$jsondata_rmem" > realmem.txt
@@ -63,10 +63,10 @@ converter() {
       echo
       echo "InfluxDB import queries"
       echo
-      echo "curl -i -XPOST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
       find . -type f -name "*-split-*" | sort | while read f; do
         fn=$(basename $f)
-        echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
+        echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
       done
     else
       echo
@@ -77,10 +77,10 @@ converter() {
       echo
       echo "InfluxDB import queries"
       echo
-      echo "curl -i -XPOST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
-      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
-      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
-      echo "curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
+      echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
+      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
+      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
     fi
   fi
 }

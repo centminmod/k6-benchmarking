@@ -67,10 +67,10 @@ virtualmem: virtualmem.txt (1939)
 
 InfluxDB import queries
 
-curl -i -XPOST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
-curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
-curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
-curl -i -XPOST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
+curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
+curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
+curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
 
 k6 test completed
 ```
