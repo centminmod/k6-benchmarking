@@ -53,17 +53,17 @@ export const options = {
   scenarios: {
     // // scenario 1
     // https://k6.io/docs/using-k6/scenarios/executors/constant-arrival-rate
-    constant_arrival_rate: {
-      executor: 'constant-arrival-rate',
-      startTime: '0s',
-      rate: `${__ENV.RPS}`,
-      timeUnit: '1s',
-      duration: `${__ENV.STAGETIME}`,
-      preAllocatedVUs: `${__ENV.USERS}`,
-      maxVUs: 1000,
-      gracefulStop:     '30s',
-      tags: { executor: 'constant-arrival-rate' },
-    },
+    // constant_arrival_rate: {
+    //   executor: 'constant-arrival-rate',
+    //   startTime: '0s',
+    //   rate: `${__ENV.RPS}`,
+    //   timeUnit: '1s',
+    //   duration: `${__ENV.STAGETIME}`,
+    //   preAllocatedVUs: `${__ENV.USERS}`,
+    //   maxVUs: 1000,
+    //   gracefulStop:     '30s',
+    //   tags: { executor: 'constant-arrival-rate' },
+    // },
     // // scenario 2
     // https://k6.io/docs/using-k6/scenarios/executors/per-vu-iterations
     // per_vu_iterations: {
@@ -125,7 +125,7 @@ export const options = {
   },
   // https://k6.io/docs/using-k6/k6-options/reference/#system-tags
   // systemTags: ['proto', 'status', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'expected_response'],
-  systemTags: [ 'status', 'name', 'check', 'error', 'error_code', 'scenario', 'expected_response', 'vu'],
+  systemTags: [ 'status', 'name', 'check', 'error', 'error_code', 'scenario', 'expected_response'],
   // systemTags: ['proto', 'subproto', 'status', 'method', 'url', 'name', 'group', 'check', 'error', 'error_code', 'tls_version', 'scenario', 'service', 'expected_response'],
   // thresholds: {
     // 'http_req_duration{gzip:yes}': ["avg<150", "p(95)<500"],
