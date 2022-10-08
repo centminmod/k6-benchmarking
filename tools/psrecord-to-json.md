@@ -156,3 +156,12 @@ JSON converted data
   }
 ]
 ```
+
+# psrecord InfluxDB / Grafana
+
+For Nginx web server tested CPU and Memory usage
+
+![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-01.png)
+
+![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-02.png)
+
