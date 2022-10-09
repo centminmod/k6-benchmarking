@@ -59,18 +59,22 @@ INFO[0121] [k6-reporter v2.3.0] Generating HTML summary report  source=console
 
      parsing and converting nginx psrecord data...
      waiting for psrecord to close its log...
+     ./tools/psrecord-to-json.sh influx psrecord-ramping-100vus-nginx.log
+     2022-10-09 04:32:24.478233729 +0000
+     file_start_timestamp_epoch=1665289944
+     file_start_timestamp=1665289944000000000
 
-Saved InfluxDB formatted data files at:
-cpuload: cpuload.txt (1939)
-realmem: realmem.txt (1939)
-virtualmem: virtualmem.txt (1939)
+     Saved InfluxDB formatted data files at:
+     cpuload: cpuload.txt (761)
+     realmem: realmem.txt (761)
+     virtualmem: virtualmem.txt (761)
 
-InfluxDB import queries
+     InfluxDB import queries
 
-curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
+     curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
 
 k6 test completed
 ```
