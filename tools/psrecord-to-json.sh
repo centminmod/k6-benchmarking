@@ -13,6 +13,7 @@ fi
 converter() {
   mode="$1"
   file="$2"
+  file_ns=$(echo "psrecord-ramping-${STAGEVU3}vus-nginx.log" | sed -e 's|.log|.time.nanoseconds.txt|')
   if [[ "$mode" = 'json' ]]; then
     cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]'
   elif [[ "$mode" = 'influx' ]]; then
@@ -20,15 +21,22 @@ converter() {
     # cpuload, realmem, virtualmem and their respective values
 
     # nanoseconds of file last access
-    file_start_timestamp_epoch=$(stat --format='%Z' $file)
-    file_start_timestamp=$(date -d @${file_start_timestamp_epoch} +%s%N)
-    echo "$(stat --format='%z' $file)"
-    echo "file_start_timestamp_epoch=$file_start_timestamp_epoch"
-    echo "file_start_timestamp=$file_start_timestamp"
+    if [ -f "$file_ns" ]; then
+      file_time="$file_ns"
+      file_start_timestamp_nanoseconds=$(cat $file_time)
+      file_start_timestamp="$file_start_timestamp_nanoseconds"
+    else
+      file_time="$file"
+      file_start_timestamp_epoch=$(stat --format='%Z' $file_time)
+      file_start_timestamp=$(date -d @${file_start_timestamp_epoch} +%s%N)
+    fi
+    echo "     $(stat --format='%z' $file_time)"
+    echo "     file_start_timestamp_epoch=$file_start_timestamp_epoch"
+    echo "     file_start_timestamp=$file_start_timestamp"
     jsondata=$(cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]')
-    jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,app=nginx value=\(.cpuload) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
-    jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,app=nginx value=\(.realmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
-    jsondata_vmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, virtualmem: .virtualmem}' | jq --arg t "$file_start_timestamp" -r '"virtualmem,app=nginx value=\(.virtualmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
+    jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,app=nginx value=\(.cpuload) \((.time|tonumber*1000000000)+($t|tonumber))"')
+    jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,app=nginx value=\(.realmem) \((.time|tonumber*1000000000)+($t|tonumber))"')
+    jsondata_vmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, virtualmem: .virtualmem}' | jq --arg t "$file_start_timestamp" -r '"virtualmem,app=nginx value=\(.virtualmem) \((.time|tonumber*1000000000)+($t|tonumber))"')
 
     # save influxdb formatted data files to be inserted via
     # curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
@@ -48,43 +56,43 @@ converter() {
       split -l "$SPLITSIZE" realmem.txt realmem-split-
       split -l "$SPLITSIZE" virtualmem.txt virtualmem-split-
       echo
-      echo "Saved InfluxDB formatted data files at:"
+      echo "     Saved InfluxDB formatted data files at:"
       find . -type f -name "cpuload-split-*" | while read f; do
         fn=$(basename $f)
         count_cpu=$(cat $fn|wc -l)
-        echo "cpuload: $fn ($count_cpu)"
+        echo "     cpuload: $fn ($count_cpu)"
       done
       find . -type f -name "realmem-split-*" | while read f; do
         fn=$(basename $f)
         count_rmem=$(cat $fn|wc -l)
-        echo "realmem: $fn ($count_rmem)"
+        echo "     realmem: $fn ($count_rmem)"
       done
       find . -type f -name "virtualmem-split-*" | while read f; do
         fn=$(basename $f)
         count_vmem=$(cat $fn|wc -l)
-        echo "virtualmem: $fn ($count_vmem)"
+        echo "     virtualmem: $fn ($count_vmem)"
       done
       echo
-      echo "InfluxDB import queries"
+      echo "     InfluxDB import queries"
       echo
       echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
       find . -type f -name "*-split-*" | sort | while read f; do
         fn=$(basename $f)
-        echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
+        echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
       done
     else
       echo
-      echo "Saved InfluxDB formatted data files at:"
-      echo "cpuload: cpuload.txt ($count_cpu)"
-      echo "realmem: realmem.txt ($count_rmem)"
-      echo "virtualmem: virtualmem.txt ($count_vmem)"
+      echo "     Saved InfluxDB formatted data files at:"
+      echo "     cpuload: cpuload.txt ($count_cpu)"
+      echo "     realmem: realmem.txt ($count_rmem)"
+      echo "     virtualmem: virtualmem.txt ($count_vmem)"
       echo
-      echo "InfluxDB import queries"
+      echo "     InfluxDB import queries"
       echo
-      echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
-      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
-      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
-      echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
+      echo "     curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
       echo
     fi
   fi

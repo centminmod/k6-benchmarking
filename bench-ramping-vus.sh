@@ -20,6 +20,9 @@ TASKSET_ENABLE='y'
 
 # local -out
 ENABLE_LOCAL_OUT='y'
+
+# psrecord
+PSRECORD_DELAY='100'
 ###############################################################################
 if [[ "$TASKSET_ENABLE" = [Yy] ]]; then
   TASKSET_OPT="taskset -c ${TASKSET_CPUS} "
@@ -59,13 +62,14 @@ parse_psrecord() {
   echo "     parsing and converting nginx psrecord data..."
   echo "     waiting for psrecord to close its log..."
   sleep 102
-  ./tools/psrecord-to-json.sh influx $input_psrecord_file
+  echo "     ./tools/psrecord-to-json.sh influx $input_psrecord_file"
+  ./tools/psrecord-to-json.sh influx "$input_psrecord_file"
 }
 
 end_test() {
   psrecord_file="$1"
   sysctl -w net.ipv4.tcp_tw_reuse=0 >/dev/null 2>&1
-  parse_psrecord "$psrecord_file"
+  parse_psrecord "${psrecord_file}.log"
   echo
   echo "k6 test completed"
 }
@@ -118,18 +122,28 @@ run_test() {
   start_test
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
   rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.log"
-  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
-  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt"
+  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
+  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &
+  # log psrecord date timestamps
+  file_start_timestamp_epoch=$(date +%s)
+  file_start_timestamp_human=$(date -d @$file_start_timestamp_epoch)
+  file_start_timestamp_nanoseconds=$(($file_start_timestamp_epoch*1000000000))
+  echo "$file_start_timestamp_epoch" > psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt
+  echo "$file_start_timestamp_human" > psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt
+  echo "$file_start_timestamp_nanoseconds" > psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt
   echo
   if [[ "$INFLUXDB" = [yY] ]]; then
     rm -f "psrecord-ramping-${STAGEVU3}vus.log"
-    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png"
-    psrecord "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+100)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png
+    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png"
+    psrecord "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png
   else
     echo "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
     ${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
-  end_test "psrecord-ramping-${STAGEVU3}vus-nginx.log"
+  end_test "psrecord-ramping-${STAGEVU3}vus-nginx"
 }
 
 help() {
