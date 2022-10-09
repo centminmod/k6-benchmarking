@@ -20,7 +20,11 @@ converter() {
     # cpuload, realmem, virtualmem and their respective values
 
     # nanoseconds of file last access
-    file_start_timestamp=$(date -d @$(stat --format='%Z' $file) +%s%N)
+    file_start_timestamp_epoch=$(stat --format='%Z' $file)
+    file_start_timestamp=$(date -d @${file_start_timestamp_epoch} +%s%N)
+    echo "$(stat --format='%z' $file)"
+    echo "file_start_timestamp_epoch=$file_start_timestamp_epoch"
+    echo "file_start_timestamp=$file_start_timestamp"
     jsondata=$(cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]')
     jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,app=nginx value=\(.cpuload) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
     jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,app=nginx value=\(.realmem) \((.time|tonumber*100000)+($t|tonumber*100000)/100000)"')
@@ -31,7 +35,7 @@ converter() {
     # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
     # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
     # curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
-
+    rm -f cpuload.txt realmem.txt virtualmem.txt
     echo "$jsondata_cpu" > cpuload.txt
     echo "$jsondata_rmem" > realmem.txt
     echo "$jsondata_vmem" > virtualmem.txt
@@ -81,6 +85,7 @@ converter() {
       echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
       echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
       echo "curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
+      echo
     fi
   fi
 }
