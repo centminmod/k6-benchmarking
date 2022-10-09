@@ -16,13 +16,37 @@ Original psrecord `psrecord-ramping-100vus-nginx.log` saved cpu and memory usage
 # Usage
 
 ```
-./psrecord-to-json.sh 
-
 Usage:
 
 ./psrecord-to-json.sh json psrecord_file.log
 ./psrecord-to-json.sh influx psrecord_file.log
+
+nanosecond to epoch converter
+./psrecord-to-json.sh nsepoch 1665324009800353614
+
+epoch to nanosecond converter
+./psrecord-to-json.sh epochns 1665324009
 ```
+
+# Useful Tools
+
+nanosecond to epoch convert to make life easier inspecting the batch Influx formatted data file's timestamps which are in nanoseconds
+
+```
+./psrecord-to-json.sh nsepoch 1665324009800353614
+1665324009
+Sun Oct 9 14:00:09 UTC 2022
+```
+
+and epoch to nanosecond convert
+
+```
+./psrecord-to-json.sh epochns 1665324009
+1665324009000000000
+Sun Oct 9 14:00:09 UTC 2022
+```
+
+# Convert psrecord data files
 
 Influx converted data files as per https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file
 

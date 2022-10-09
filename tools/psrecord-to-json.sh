@@ -98,12 +98,34 @@ converter() {
   fi
 }
 
+nano_to_epoch() {
+  ep=$1
+  epo=$(echo $((ep/1000000000)))
+  epoh=$(date -d @$epo)
+  echo $epo
+  echo $epoh
+}
+
+epoch_to_nano() {
+  ep=$1
+  epoh=$(date -d @$ep)
+  epo=$(echo $((ep * 1000000000)))
+  echo $epo
+  echo $epoh
+}
+
 help() {
   echo
   echo "Usage:"
   echo
   echo "$0 json psrecord_file.log"
   echo "$0 influx psrecord_file.log"
+  echo
+  echo "nanosecond to epoch converter"
+  echo "$0 nsepoch 1665324009800353614"
+  echo
+  echo "epoch to nanosecond converter"
+  echo "$0 epochns 1665324009"
 }
 
 case "$1" in
@@ -120,6 +142,12 @@ case "$1" in
     else
       echo "error: $2 not does not exist"
     fi
+    ;;
+  nsepoch )
+    nano_to_epoch "$2"
+    ;;
+  epochns )
+    epoch_to_nano "$2"
     ;;
   * )
     help
