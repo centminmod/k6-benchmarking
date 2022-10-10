@@ -55,17 +55,26 @@ Reports the number of data entry lines as well.
 ```
 ./psrecord-to-json.sh influx psrecord-ramping-100vus-nginx.log
 
-Saved InfluxDB formatted data files at:
-cpuload: cpuload.txt (1543)
-realmem: realmem.txt (1543)
-virtualmem: virtualmem.txt (1543)
+     start time (Australia/Brisbane : Mon Oct 10 23:18:02 AEST 2022
+     end time (Australia/Brisbane ): Mon Oct 10 23:33:01 AEST 2022
+     start time (UTC): Mon Oct 10 13:18:02 UTC 2022
+     end time (UTC): Mon Oct 10 13:33:01 UTC 2022
+     file_start_timestamp (Australia/Brisbane) = 1665407882000000000
+     file_start_timestamp (UTC) = 1665407882000000000
+     file_start_timestamp_epoch (UTC) = 1665407882
+     file_end_timestamp (UTC) = 1665408781
 
-InfluxDB import queries
+     Saved InfluxDB formatted data files at:
+     cpuload: cpuload.txt (1893)
+     realmem: realmem.txt (1893)
+     virtualmem: virtualmem.txt (1893)
 
-curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
-curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
+     InfluxDB import queries
+
+     curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord"
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt
+     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt
 ```
 
 These files will be inserted into InfluxDB database `psrecord` via:
