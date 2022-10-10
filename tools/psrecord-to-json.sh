@@ -14,7 +14,9 @@ converter() {
   mode="$1"
   file="$2"
   file_ns=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.txt|')
+  file_ns_brisbane=$(echo "$file" | sed -e 's|.log|.time.nanoseconds_brisbane.txt|')
   file_ns_original=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.original.txt|')
+  file_ns_original_brisbane=$(echo "$file" | sed -e 's|.log|.time.nanoseconds_brisbane.original.txt|')
   # use preserved timestamp
   touch -r "$file_ns_original" "$file"
   if [[ "$mode" = 'json' ]]; then
@@ -28,14 +30,33 @@ converter() {
       file_time="$file_ns"
       file_start_timestamp_nanoseconds=$(cat $file_time)
       file_start_timestamp="$file_start_timestamp_nanoseconds"
+      file_start_timestamp_epoch=$(($file_start_timestamp/1000000000))
+      file_start_timestamp_brisbane=$(TZ=Australia/Brisbane date -d @"$(($file_start_timestamp/1000000000))")
+      file_start_timestamp_nanoseconds_brisbane=$(TZ=Australia/Brisbane date -d @"$(($file_start_timestamp/1000000000))" +%s%N)
+      file_end_timestamp=$(stat --format='%Z' $file)
+      file_end_timestamp_human=$(date -d @$file_end_timestamp)
+      file_end_timestamp_human_brisbane=$(TZ=Australia/Brisbane date -d @$file_end_timestamp)
+      file_end_timestamp_nanoseconds=$(($file_end_timestamp * 1000000000))
     else
       file_time="$file"
       file_start_timestamp_epoch=$(stat --format='%Z' $file_time)
       file_start_timestamp=$(date -d @${file_start_timestamp_epoch} +%s%N)
+      file_start_timestamp_epoch=$(($file_start_timestamp/1000000000))
+      file_start_timestamp_brisbane=$(TZ=Australia/Brisbane date -d @"$(($file_start_timestamp/1000000000))")
+      file_start_timestamp_nanoseconds_brisbane=$(TZ=Australia/Brisbane date -d @"$(($file_start_timestamp/1000000000))" +%s%N)
+      file_end_timestamp=$(stat --format='%Z' $file)
+      file_end_timestamp_human=$(date -d @$file_end_timestamp)
+      file_end_timestamp_human_brisbane=$(TZ=Australia/Brisbane date -d @$file_end_timestamp)
+      file_end_timestamp_nanoseconds=$(($file_end_timestamp * 1000000000))
     fi
-    echo "     $(stat --format='%z' $file_time)"
-    echo "     file_start_timestamp_epoch=$file_start_timestamp_epoch"
-    echo "     file_start_timestamp=$file_start_timestamp"
+    echo "     start time (Australia/Brisbane : $(TZ=Australia/Brisbane date -d @$file_start_timestamp_epoch)"
+    echo "     end time (Australia/Brisbane ): $file_end_timestamp_human_brisbane"
+    echo "     start time (UTC): $(date -d @$file_start_timestamp_epoch)"
+    echo "     end time (UTC): $file_end_timestamp_human"
+    echo "     file_start_timestamp (Australia/Brisbane) = $file_start_timestamp_nanoseconds_brisbane"
+    echo "     file_start_timestamp (UTC) = $file_start_timestamp"
+    echo "     file_start_timestamp_epoch (UTC) = $file_start_timestamp_epoch"
+    echo "     file_end_timestamp (UTC) = $file_end_timestamp"
     jsondata=$(cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]')
     jsondata_cpu=$(echo "$jsondata" | jq -r '.[] | {time: .time, cpuload: .cpuload}' | jq --arg t "$file_start_timestamp" -r '"cpuload,app=nginx value=\(.cpuload) \((.time|tonumber*1000000000)+($t|tonumber))"')
     jsondata_rmem=$(echo "$jsondata" | jq -r '.[] | {time: .time, realmem: .realmem}' | jq --arg t "$file_start_timestamp" -r '"realmem,app=nginx value=\(.realmem) \((.time|tonumber*1000000000)+($t|tonumber))"')
@@ -97,6 +118,8 @@ converter() {
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
       echo
+      echo "     Grafana Dashboard Time Frame"
+      echo "     ?orgId=1&from=$file_start_timestamp_epoch&to=$file_end_timestamp"
     fi
   fi
 }

@@ -13,6 +13,9 @@ STAGEVU3=100
 STAGEVU4=0
 VERBOSE='n'
 
+# Gzip compression test
+GZIP_HTTP='y'
+
 # 4 CPUS = 0-3
 # 2 CPUS = 0-1
 TASKSET_CPUS='0-3'
@@ -24,6 +27,10 @@ ENABLE_LOCAL_OUT='y'
 # psrecord
 PSRECORD_DELAY='100'
 ###############################################################################
+if [ ! -f benchmark-scenarios-multi.js ]; then
+  echo "error: benchmark-scenarios-multi.js not found"
+  exit 1
+fi
 if [[ "$TASKSET_ENABLE" = [Yy] ]]; then
   TASKSET_OPT="taskset -c ${TASKSET_CPUS} "
 else
@@ -39,6 +46,11 @@ if [[ "$VERBOSE" = [yY] ]]; then
 else
   VOPT=""
   export XK6_BROWSER_LOG=error
+fi
+if [[ "$GZIP_HTTP" = [yY] ]]; then
+  sed -i "s|\/\/    \"accept-encoding\": \"gzip, deflate\",|      \"accept-encoding\": \"gzip, deflate\",|" benchmark-scenarios-multi.js
+else
+  sed -i "s|      \"accept-encoding\": \"gzip, deflate\",|\/\/    \"accept-encoding\": \"gzip, deflate\",|" benchmark-scenarios-multi.js
 fi
 
 export K6_INFLUXDB_PAYLOAD_SIZE=100000
@@ -125,15 +137,28 @@ run_test() {
   rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt"
   rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt"
   rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.original.txt"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds_brisbane.txt"
   # log psrecord date timestamps
   file_start_timestamp_epoch=$(date +%s)
   file_start_timestamp_human=$(date -d @$file_start_timestamp_epoch)
+  file_start_timestamp_epoch_brisbane=$(TZ=Australia/Brisbane date -d "$file_start_timestamp_human" +%s)
+  file_start_timestamp_human_brisbane=$(TZ=Australia/Brisbane date -d "$file_start_timestamp_human")
+  file_start_timestamp_nanoseconds_brisbane=$(($file_start_timestamp_epoch_brisbane*1000000000))
   file_start_timestamp_nanoseconds=$(($file_start_timestamp_epoch*1000000000))
   echo "$file_start_timestamp_epoch" > psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt
   echo "$file_start_timestamp_human" > psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt
   echo "$file_start_timestamp_nanoseconds" > psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt
+  echo "$file_start_timestamp_nanoseconds_brisbane" > psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds_brisbane.txt
   # preserve timestamp
   touch -r psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.original.txt
+  touch -r psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds_brisbane.txt psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds_brisbane.original.txt
+  echo "#####################################################################"
+  echo "start time (Australia/Brisbane): $file_start_timestamp_human_brisbane"
+  echo "start nanosecond time (Australia/Brisbane): $file_start_timestamp_nanoseconds_brisbane"
+  echo "start time (UTC): $file_start_timestamp_human"
+  echo "start nanosecond time (UTC): $file_start_timestamp_nanoseconds"
+  echo "#####################################################################"
+  echo
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
 
   echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
