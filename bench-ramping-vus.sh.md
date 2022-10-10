@@ -78,3 +78,12 @@ INFO[0121] [k6-reporter v2.3.0] Generating HTML summary report  source=console
 
 k6 test completed
 ```
+
+# psrecord InfluxDB / Grafana
+
+For Nginx web server tested CPU and Memory usage
+
+![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-01.png)
+
+![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-02.png)
+
