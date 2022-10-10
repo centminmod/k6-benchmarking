@@ -120,13 +120,6 @@ run_test() {
   export K6_INFLUXDB_CONCURRENT_WRITES="$INFLUXDB_CONCURRENT_WRITES_OPT"
 
   start_test
-  spid=$(cminfo service-info nginx | jq -r '.MainPID')
-  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.log"
-  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt"
-  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt"
-  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt"
-  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
-  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &
   # log psrecord date timestamps
   file_start_timestamp_epoch=$(date +%s)
   file_start_timestamp_human=$(date -d @$file_start_timestamp_epoch)
@@ -134,6 +127,14 @@ run_test() {
   echo "$file_start_timestamp_epoch" > psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt
   echo "$file_start_timestamp_human" > psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt
   echo "$file_start_timestamp_nanoseconds" > psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt
+  spid=$(cminfo service-info nginx | jq -r '.MainPID')
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.log"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.epoch.txt"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.human.txt"
+  rm -f "psrecord-ramping-${STAGEVU3}vus-nginx.time.nanoseconds.txt"
+
+  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &"
+  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus-nginx.log --plot plot-ramping-${STAGEVU3}vus-nginx.png &
   echo
   if [[ "$INFLUXDB" = [yY] ]]; then
     rm -f "psrecord-ramping-${STAGEVU3}vus.log"
