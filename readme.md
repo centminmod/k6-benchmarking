@@ -5,6 +5,7 @@
   * [Constant Request Rate Benchmarks](#constant-request-rate-benchmarks)
   * [User Concurrency Benchmarks Without Random Sleep](#user-concurrency-benchmarks-without-random-sleep)
   * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
+  * [bench-ramping-vus.sh automated k6 benchmarking](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh.md)
 * [InfluxDB + Grafana](#influxdb--grafana)
   * [Ramping VUs](#ramping-vus)
 
