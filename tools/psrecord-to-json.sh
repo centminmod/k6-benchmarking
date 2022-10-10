@@ -13,7 +13,10 @@ fi
 converter() {
   mode="$1"
   file="$2"
-  file_ns=$(echo "psrecord-ramping-${STAGEVU3}vus-nginx.log" | sed -e 's|.log|.time.nanoseconds.txt|')
+  file_ns=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.txt|')
+  file_ns_original=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.original.txt|')
+  # use preserved timestamp
+  touch -r "$file_ns_original" "$file"
   if [[ "$mode" = 'json' ]]; then
     cat "$file" | sed -e '1d' | column -t | tr -s ' ' | jq -nR '[inputs | split(" ") | { "time": .[0], "cpuload": .[1], "realmem": .[2], "virtualmem": .[3] }]'
   elif [[ "$mode" = 'influx' ]]; then
