@@ -8,6 +8,7 @@
   * [bench-ramping-vus.sh automated k6 benchmarking](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh.md)
 * [InfluxDB + Grafana](#influxdb--grafana)
   * [Ramping VUs](#ramping-vus)
+* [k6 Log Parsing](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md)
 
 # Install
 
