@@ -92,6 +92,7 @@ cat sample-output-vus-log.log | jq -r
 ```
 ```
 cat sample-output-vus-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 vus,testname=rampingvus value=7 1665467664486
 vus,testname=rampingvus value=4 1665467654479
 vus,testname=rampingvus value=1 1665467657481
@@ -101,6 +102,7 @@ or
 
 ```
 cat sample-output-vus-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|.[]) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 vus,testname=rampingvus value=7 1665467664486
 vus,testname=rampingvus value=4 1665467654479
 vus,testname=rampingvus value=1 1665467657481
@@ -109,7 +111,8 @@ vus,testname=rampingvus value=1 1665467657481
 or ideally
 
 ```
-cat sample-output-vus-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+cat sample-output-vus-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 vus,testname=rampingvus value=7 1665467664486
 vus,testname=rampingvus value=4 1665467654479
 vus,testname=rampingvus value=1 1665467657481
@@ -173,6 +176,7 @@ cat sample-output-http-reqs-log.log | jq -r                                     
 ```
 ```
 cat sample-output-http-reqs-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_reqs,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=1 1665468046944
 http_reqs,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=1 1665468053071
 http_reqs,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=1 1665468059117
@@ -181,7 +185,8 @@ http_reqs,testname=rampingvus,expected_response=true,name=https://domain1.com,st
 or
 
 ```
-cat sample-output-http-reqs-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+cat sample-output-http-reqs-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_reqs,stage=3,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com,status=200,expected_response=true value=1 1665468046944
 http_reqs,expected_response=true,scenario=ramping_vus,stage=3,testname=rampingvus,name=https://domain1.com,status=200 value=1 1665468053071
 http_reqs,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true value=1 1665468059117
@@ -245,6 +250,7 @@ cat sample-output-http-duration-log.log | jq -r
 
 ```
 cat sample-output-http-duration-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_duration,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.19456 1665468046944
 http_req_duration,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.19281 1665468053071
 http_req_duration,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.184015 16654680591171665412286959
@@ -253,10 +259,11 @@ http_req_duration,testname=rampingvus,expected_response=true,name=https://domain
 or ideally
 
 ```
-cat sample-output-http-duration-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_duration,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com,status=200,expected_response=true,stage=3 value=0.19456 1665468046944
-http_req_duration,stage=3,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true,scenario=ramping_vus value=0.19281 1665468053071
-http_req_duration,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true value=0.184015 1665468059117
+cat sample-output-http-duration-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_duration,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.19456 1665468046944
+http_req_duration,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.19281 1665468053071
+http_req_duration,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.184015 1665468059117
 ```
 
 # `http_req_sending`
@@ -317,6 +324,7 @@ cat sample-output-http-req-sending-log.log | jq -r
 
 ```
 cat sample-output-http-req-sending-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_sending,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.029499 1665468046944
 http_req_sending,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.029202 1665468053071
 http_req_sending,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.029498 1665468059117
@@ -324,10 +332,11 @@ http_req_sending,testname=rampingvus,expected_response=true,name=https://domain1
 or ideally
 
 ```
-cat sample-output-http-req-sending-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_sending,scenario=ramping_vus,name=https://domain1.com,status=200,expected_response=true,stage=3,testname=rampingvus value=0.029499 1665468046944
-http_req_sending,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true,scenario=ramping_vus,stage=3 value=0.029202 1665468053071
-http_req_sending,name=https://domain1.com,status=200,expected_response=true,testname=rampingvus,scenario=ramping_vus,stage=3 value=0.029498 1665468059117
+cat sample-output-http-req-sending-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_sending,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.029499 1665468046944
+http_req_sending,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.029202 1665468053071
+http_req_sending,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.029498 1665468059117
 ```
 
 # `http_req_tls_handshaking`
@@ -388,6 +397,7 @@ cat sample-output-http-req-tls-log.log | jq -r
 
 ```
 cat sample-output-http-req-tls-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_tls_handshaking,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468046944
 http_req_tls_handshaking,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468053071
 http_req_tls_handshaking,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
@@ -395,10 +405,11 @@ http_req_tls_handshaking,testname=rampingvus,expected_response=true,name=https:/
 or ideally
 
 ```
-cat sample-output-http-req-tls-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_tls_handshaking,name=https://domain1.com,status=200,expected_response=true,stage=3,testname=rampingvus,scenario=ramping_vus value=0 1665468046944
-http_req_tls_handshaking,scenario=ramping_vus,stage=3,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true value=0 1665468053071
-http_req_tls_handshaking,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true value=0 1665468059117
+cat sample-output-http-req-tls-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_tls_handshaking,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468046944
+http_req_tls_handshaking,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468053071
+http_req_tls_handshaking,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
 ```
 
 # `http_req_connecting`
@@ -459,6 +470,7 @@ cat sample-output-http-req-connecting-log.log | jq -r
 
 ```
 cat sample-output-http-req-connecting-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_connecting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468046944
 http_req_connecting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468053071
 http_req_connecting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
@@ -466,10 +478,11 @@ http_req_connecting,testname=rampingvus,expected_response=true,name=https://doma
 or ideally
 
 ```
-cat sample-output-http-req-connecting-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_connecting,stage=3,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com,status=200,expected_response=true value=0 1665468046944
-http_req_connecting,stage=3,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true,scenario=ramping_vus value=0 1665468053071
-http_req_connecting,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true value=0 1665468059117
+cat sample-output-http-req-connecting-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_connecting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468046944
+http_req_connecting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468053071
+http_req_connecting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
 ```
 
 # `http_req_waiting`
@@ -531,6 +544,7 @@ cat sample-output-http-req-waiting-log.log | jq -r
 
 ```
 cat sample-output-http-req-waiting-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.146218 1665468046944
 http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.145535 1665468053071
 http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.139135 1665468059117
@@ -538,10 +552,11 @@ http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1
 or ideally
 
 ```
-cat sample-output-http-req-waiting-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_waiting,stage=3,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com,status=200,expected_response=true value=0.146218 1665468046944
-http_req_waiting,scenario=ramping_vus,stage=3,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true value=0.145535 1665468053071
-http_req_waiting,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true,testname=rampingvus value=0.139135 1665468059117
+cat sample-output-http-req-waiting-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_waiting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.146218 1665468046944
+http_req_waiting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.145535 1665468053071
+http_req_waiting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.139135 1665468059117
 ```
 
 # `http_req_receiving`
@@ -602,6 +617,7 @@ cat sample-output-http-req-receiving-log.log | jq -r
 
 ```
 cat sample-output-http-req-receiving-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_receiving,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.018843 1665468046944
 http_req_receiving,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.018073 1665468053071
 http_req_receiving,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.015382 1665468059117
@@ -609,10 +625,11 @@ http_req_receiving,testname=rampingvus,expected_response=true,name=https://domai
 or ideally
 
 ```
-cat sample-output-http-req-receiving-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_receiving,status=200,expected_response=true,stage=3,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com value=0.018843 1665468046944
-http_req_receiving,scenario=ramping_vus,stage=3,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true value=0.018073 1665468053071
-http_req_receiving,expected_response=true,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200 value=0.015382 1665468059117
+cat sample-output-http-req-receiving-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_receiving,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.018843 1665468046944
+http_req_receiving,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.018073 1665468053071
+http_req_receiving,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.015382 1665468059117
 ```
 
 # `http_req_failed`
@@ -673,6 +690,7 @@ cat sample-output-http-req-failed-log.log | jq -r
 
 ```
 cat sample-output-http-req-failed-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
 http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468046944
 http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468053071
 http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
@@ -680,10 +698,11 @@ http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.
 or ideally
 
 ```
-cat sample-output-http-req-failed-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
-http_req_failed,expected_response=true,stage=3,testname=rampingvus,scenario=ramping_vus,name=https://domain1.com,status=200 value=0 1665468046944
-http_req_failed,testname=rampingvus,name=https://domain1.com,status=200,expected_response=true,scenario=ramping_vus,stage=3 value=0 1665468053071
-http_req_failed,testname=rampingvus,scenario=ramping_vus,stage=3,name=https://domain1.com,status=200,expected_response=true value=0 1665468059117
+cat sample-output-http-req-failed-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+
+http_req_failed,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468046944
+http_req_failed,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468053071
+http_req_failed,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
 ```
 
 # All Metrics
@@ -911,19 +930,20 @@ cat all-metrics-log.log | jq -r
 ```
 
 ```
-cat all-metrics-log.log | jq -r '"\(.metric),testname=\(.data.tags.testname),expected_response=\(.data.tags.expected_response),name=\(.data.tags.name),stage=\(.data.tags.stage),scenario=\(.data.tags.scenario),status=\(.data.tags.status) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
+cat all-metrics-log.log | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000 + (.data.time[20:27]|tonumber))"'
 
-http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.145535 1665468053071
-http_req_receiving,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.018073 1665468053071
-http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468053071
-http_reqs,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=1 1665468059117
-http_req_duration,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.184015 1665468059117
-http_req_blocked,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.000222 1665468059117
-http_req_connecting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
-http_req_tls_handshaking,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
-http_req_sending,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.029498 1665468059117
-http_req_waiting,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.139135 1665468059117
-http_req_receiving,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0.015382 1665468059117
-http_req_failed,testname=rampingvus,expected_response=true,name=https://domain1.com,stage=3,scenario=ramping_vus,status=200 value=0 1665468059117
+
+http_req_waiting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.145535 1665468053071
+http_req_receiving,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.018073 1665468053071
+http_req_failed,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468053071
+http_reqs,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=1 1665468059117
+http_req_duration,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.184015 1665468059117
+http_req_blocked,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.000222 1665468059117
+http_req_connecting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
+http_req_tls_handshaking,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
+http_req_sending,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.029498 1665468059117
+http_req_waiting,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.139135 1665468059117
+http_req_receiving,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0.015382 1665468059117
+http_req_failed,expected_response=true,name=https://domain1.com,scenario=ramping_vus,stage=3,status=200,testname=rampingvus value=0 1665468059117
 ```
 
