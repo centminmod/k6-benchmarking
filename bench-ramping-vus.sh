@@ -3,6 +3,7 @@
 # wrapper for k6 ramping-vus executor based benchmark-scenarios-multi.js
 # https://github.com/centminmod/k6-benchmarking
 ###############################################################################
+VER=0.5
 WORKDIR="/home/k6-workdir"
 SCRIPT_TESTNAME=ramping
 # starting VU count
@@ -191,18 +192,29 @@ run_test() {
   echo
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
 
-  echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &"
-  psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &
-  echo
+  if [ -n "$spid" ]; then
+    echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &"
+    psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &
+    echo
+  fi
   if [[ "$INFLUXDB" = [yY] ]]; then
     rm -f "psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log"
     echo "psrecord \"${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png"
     psrecord "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png
   else
+    if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
+      # remove vu,tls_version,group,protocol from 
+      # K6_INFLUXDB_TAGS_AS_FIELDS for local runs which opt to convert 
+      # k6 JSON log output to InfluxDB batch line format as overhead for 
+      # InfluxDB realtime ingestion is removed so no need to reduce tag count
+      export K6_INFLUXDB_TAGS_AS_FIELDS=url
+    fi
     echo "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
     ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
-  parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log"
+  if [ -n "$spid" ]; then
+    parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log"
+  fi
   if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
     convert_benchlog "${WORKDIR}/$LOCAL_OUT_FILENAME"
   fi
