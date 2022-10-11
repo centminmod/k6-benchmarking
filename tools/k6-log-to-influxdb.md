@@ -1,3 +1,5 @@
+Take k6 run with `--out json=summary-raw-scenarios-multi.gz` JSON logged output and convert it into [InfluxDB 1.8 batch line write format](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) for post-k6 run insertion into InfluxDB 1.8 database.
+
 ```
 ./k6-log-to-influxdb.sh 
 
