@@ -56,7 +56,7 @@ convert_to_influx() {
         split -l "$SPLITSIZE" $c ${fbasename}-split-
         echo
         echo "     Saved & Split InfluxDB formatted data files ($counter lines) at:"
-        find $fdirname -type f -name "${fbasename}-split-*" | while read f; do
+        find $fdirname -type f -name "${fbasename}-split-*" | sort | while read f; do
           fn=$(basename $f)
           count_file=$(cat $fn|wc -l)
           echo "     ${WORKDIR}/$fn ($count_file)"
