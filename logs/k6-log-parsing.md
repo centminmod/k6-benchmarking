@@ -37,6 +37,19 @@ curl -i -sX POST 'http://localhost:8186/write?db=k6' --data-binary @metric_name.
 
 For the following metrics https://k6.io/docs/using-k6/metrics/:
 
+* [vus](#vus)
+* [http_reqs](#http_reqs)
+* [http_req_duration](#http_req_duration)
+* [http_req_sending](#http_req_sending)
+* [http_req_tls_handshaking](#http_req_tls_handshaking)
+* [http_req_connecting](#http_req_connecting)
+* [http_req_waiting](#http_req_waiting)
+* [http_req_receiving](#http_req_receiving)
+* [http_req_failed](#http_req_failed)
+* [All Metrics](#all-metrics)
+
+# VUs
+
 `vus`
 
 ```
@@ -83,6 +96,8 @@ vus,testname=rampingvus value=7 1665467664486
 vus,testname=rampingvus value=4 1665467654479
 vus,testname=rampingvus value=1 1665467657481
 ```
+
+# http_reqs
 
 `http_reqs`
 
