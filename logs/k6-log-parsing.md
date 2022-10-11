@@ -29,7 +29,7 @@ json2jqpath sample-output-http-duration-log.log
 
 # Parsing Info InfluxDB InfluxQL Batch Write Format
 
-The InfluxQL batch write fromatted files will be inserted into `k6` named InfluxDB database running on port 8186.
+The [InfluxDB batch write fromatted](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) files will be inserted into `k6` named InfluxDB database running on port 8186.
 
 ```
 curl -i -sX POST 'http://localhost:8186/write?db=k6' --data-binary @metric_name.txt
