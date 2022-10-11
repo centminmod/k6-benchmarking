@@ -77,7 +77,7 @@ convert_to_influx() {
         echo "     InfluxDB import queries"
         echo
         echo "     curl -i -sX POST http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query --data-urlencode \"q=CREATE DATABASE "$INFLUXDB_NAME"\""
-        echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @"${WORKDIR}/$c""
+        echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @$c"
 
       fi
     done
