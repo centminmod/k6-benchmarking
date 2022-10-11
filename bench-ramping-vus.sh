@@ -13,6 +13,11 @@ STAGEVU3=100
 STAGEVU4=0
 VERBOSE='n'
 
+# test wide tags
+# https://k6.io/docs/using-k6/tags-and-groups/#test-wide-tags
+ENABLE_GLOBAL_TAGS='y'
+GLOBAL_TAG_VALUE='testname=rampingvus'
+
 # Gzip compression test
 GZIP_HTTP='y'
 
@@ -31,6 +36,12 @@ if [ ! -f benchmark-scenarios-multi.js ]; then
   echo "error: benchmark-scenarios-multi.js not found"
   exit 1
 fi
+if [[ "$ENABLE_GLOBAL_TAGS" = [Yy] ]]; then
+  GLOBAL_TAG_OPTS=" --tag $GLOBAL_TAG_VALUE"
+else
+  GLOBAL_TAG_OPTS=""
+fi
+
 if [[ "$TASKSET_ENABLE" = [Yy] ]]; then
   TASKSET_OPT="taskset -c ${TASKSET_CPUS} "
 else
@@ -166,11 +177,11 @@ run_test() {
   echo
   if [[ "$INFLUXDB" = [yY] ]]; then
     rm -f "psrecord-ramping-${STAGEVU3}vus.log"
-    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png"
-    psrecord "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png
+    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png"
+    psrecord "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log psrecord-ramping-${STAGEVU3}vus.log --plot plot-ramping-${STAGEVU3}vus.png
   else
-    echo "${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
-    ${TASKSET_OPT}k6 run${VOPT} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
+    echo "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
+    ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
   end_test "psrecord-ramping-${STAGEVU3}vus-nginx"
 }
