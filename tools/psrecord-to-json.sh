@@ -5,12 +5,18 @@
 ###############################################################################
 # break to 5000 size batches for InfluxDB
 SPLITSIZE='5000'
+
+WORKDIR="/home/k6-workdir"
 ###############################################################################
+if [ ! -d "$WORKDIR" ]; then
+  mkdir -p "$WORKDIR"
+fi
 if [ ! -f /usr/bin/jq ]; then
   yum -y -q install jq
 fi
 
 converter() {
+  cd "$WORKDIR"
   mode="$1"
   file="$2"
   file_ns=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.txt|')
@@ -84,17 +90,17 @@ converter() {
       find . -type f -name "cpuload-split-*" | while read f; do
         fn=$(basename $f)
         count_cpu=$(cat $fn|wc -l)
-        echo "     cpuload: $fn ($count_cpu)"
+        echo "     cpuload: ${WORKDIR}/$fn ($count_cpu)"
       done
       find . -type f -name "realmem-split-*" | while read f; do
         fn=$(basename $f)
         count_rmem=$(cat $fn|wc -l)
-        echo "     realmem: $fn ($count_rmem)"
+        echo "     realmem: ${WORKDIR}/$fn ($count_rmem)"
       done
       find . -type f -name "virtualmem-split-*" | while read f; do
         fn=$(basename $f)
         count_vmem=$(cat $fn|wc -l)
-        echo "     virtualmem: $fn ($count_vmem)"
+        echo "     virtualmem: ${WORKDIR}/$fn ($count_vmem)"
       done
       echo
       echo "     InfluxDB import queries"
@@ -102,21 +108,21 @@ converter() {
       echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
       find . -type f -name "*-split-*" | sort | while read f; do
         fn=$(basename $f)
-        echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @$fn"
+        echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/$fn"
       done
     else
       echo
       echo "     Saved InfluxDB formatted data files at:"
-      echo "     cpuload: cpuload.txt ($count_cpu)"
-      echo "     realmem: realmem.txt ($count_rmem)"
-      echo "     virtualmem: virtualmem.txt ($count_vmem)"
+      echo "     cpuload: ${WORKDIR}/cpuload.txt ($count_cpu)"
+      echo "     realmem: ${WORKDIR}/realmem.txt ($count_rmem)"
+      echo "     virtualmem: ${WORKDIR}/virtualmem.txt ($count_vmem)"
       echo
       echo "     InfluxDB import queries"
       echo
       echo "     curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
-      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @cpuload.txt"
-      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @realmem.txt"
-      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @virtualmem.txt"
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/cpuload.txt"
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/realmem.txt"
+      echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/virtualmem.txt"
       echo
       echo "     Grafana Dashboard Time Frame"
       echo "     ?orgId=1&from=$file_start_timestamp_epoch&to=$file_end_timestamp"
