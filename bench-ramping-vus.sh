@@ -33,10 +33,11 @@ TASKSET_ENABLE='y'
 ENABLE_LOCAL_OUT='y'
 
 # psrecord
-PSRECORD_DELAY='100'
+PSRECORD_DELAY='70'
 
 # InfluxDB data conversion
 CONVERT_JSONLOG_INFLUXDB='y'
+AUTO_INSERT_INFLUX_BATCH_DATA='y'
 ###############################################################################
 if [ ! -f benchmark-scenarios-multi.js ]; then
   echo "error: benchmark-scenarios-multi.js not found"
@@ -95,8 +96,13 @@ convert_benchlog() {
   echo "     parsing & converting k6 JSON output log $input_output_file"
   echo "     to InfluxDB batch write format..."
   sleep 5
-  echo "     ./tools/k6-log-to-influxdb.sh convert $input_output_file"
-  ./tools/k6-log-to-influxdb.sh convert "$input_output_file"
+  if [[ "$AUTO_INSERT_INFLUX_BATCH_DATA" = [yY] ]]; then
+    echo "     ./tools/k6-log-to-influxdb.sh convert-auto $input_output_file"
+    ./tools/k6-log-to-influxdb.sh convert-auto "$input_output_file"
+  else
+    echo "     ./tools/k6-log-to-influxdb.sh convert $input_output_file"
+    ./tools/k6-log-to-influxdb.sh convert "$input_output_file"
+  fi
 }
 
 parse_psrecord() {
@@ -107,8 +113,13 @@ parse_psrecord() {
   echo "     parsing & converting nginx psrecord data..."
   echo "     waiting for psrecord to close its log..."
   sleep 102
-  echo "     ./tools/psrecord-to-json.sh influx $input_psrecord_file"
-  ./tools/psrecord-to-json.sh influx "$input_psrecord_file"
+  if [[ "$AUTO_INSERT_INFLUX_BATCH_DATA" = [yY] ]]; then
+    echo "     ./tools/psrecord-to-json.sh influx-auto $input_psrecord_file"
+    ./tools/psrecord-to-json.sh influx-auto "$input_psrecord_file"
+  else
+    echo "     ./tools/psrecord-to-json.sh influx $input_psrecord_file"
+    ./tools/psrecord-to-json.sh influx "$input_psrecord_file"
+  fi
 }
 
 end_test() {

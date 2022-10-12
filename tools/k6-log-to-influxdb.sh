@@ -33,15 +33,21 @@ convert_to_influx() {
   cd "$WORKDIR"
   mode="$1"
   file="$2"
+  insert="$3"
   if [[ "$mode" = 'influx' ]]; then
     # grab vus metric
+    echo
+    echo "     filter VUs metrics to $LOGS_VU"
     $ZCATBIN "$file" | jq -c '. | select(.type=="Point" and .metric == "vus")' > "$LOGS_VU"
     # grab the rest of the metrics
+    echo "     filter all metrics to $LOGS_METRICS"
     $ZCATBIN "$file" | jq -c '. | select(.type=="Point" and .data.tags.expected_response == "true" and .data.tags.status >= "200")' > "$LOGS_METRICS"
     # parse into InfluxDB batch write formats
     # vus metrics
+    echo "     convert VUs log to InfluxDB format at $INFLUX_FORMAT_VU"
     cat "$LOGS_VU" | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000000000 + (.data.time[20:24-27]|tonumber))"' > "$INFLUX_FORMAT_VU"
     # rest of metrics
+    echo "     convert all metrics logs to InfluxDB format at $INFLUX_FORMAT_METRICS"
     cat "$LOGS_METRICS" | jq -r '"\(.metric),\(.data.tags|to_entries|map("\(.key)=\(.value|tostring)")|[.[]]|sort|join(",")) value=\(.data.value) \((.data.time[0:19] + "Z"|fromdateiso8601)*1000000000 + (.data.time[20:24-27]|tonumber))"' > "$INFLUX_FORMAT_METRICS"
     # count lines
     _array=("$INFLUX_FORMAT_VU" "$INFLUX_FORMAT_METRICS")
@@ -59,15 +65,33 @@ convert_to_influx() {
         find $fdirname -type f -name "${fbasename}-split-*" | sort | while read f; do
           fn=$(basename $f)
           count_file=$(cat $fn|wc -l)
-          echo "     ${WORKDIR}/$fn ($count_file)"
+          if [ -f "${WORKDIR}/$fn" ]; then
+            echo "     ${WORKDIR}/$fn ($count_file)"
+          else
+            echo "     ${WORKDIR}/$fn (error: missing)"
+          fi
         done
         echo
         echo "     InfluxDB import queries"
         echo
         echo "     curl -i -sX POST http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query --data-urlencode \"q=CREATE DATABASE "$INFLUXDB_NAME"\""
+        if [[ "$insert" = 'auto' ]]; then
+          echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
+          # automatically run curl batch line insertions into InfluxDB database
+          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}'
+        fi
         find $fdirname -type f -name "*-split-*" | sort | while read f; do
           fn=$(basename $f)
-          echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @${WORKDIR}/$fn"
+          if [ -f "${WORKDIR}/$fn" ]; then
+            echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @${WORKDIR}/$fn"
+            if [[ "$insert" = 'auto' ]]; then
+              echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
+            # automatically run curl batch line insertions into InfluxDB database
+            curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}'
+            fi
+          else
+            echo "     ${WORKDIR}/$fn (error: missing)"
+          fi
         done
       else
         echo
@@ -77,8 +101,17 @@ convert_to_influx() {
         echo "     InfluxDB import queries"
         echo
         echo "     curl -i -sX POST http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query --data-urlencode \"q=CREATE DATABASE "$INFLUXDB_NAME"\""
+        if [[ "$insert" = 'auto' ]]; then
+          echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
+          # automatically run curl batch line insertions into InfluxDB database
+          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}'
+        fi
         echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @$c"
-
+        if [[ "$insert" = 'auto' ]]; then
+          echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
+          # automatically run curl batch line insertions into InfluxDB database
+          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @$c | awk '{print "     " $0}'
+        fi
       fi
     done
   fi
@@ -95,6 +128,13 @@ case "$1" in
   convert )
     if [ -f "$2" ]; then
       convert_to_influx influx "$2"
+    else
+      echo "error: $2 not does not exist"
+    fi
+    ;;
+  convert-auto )
+    if [ -f "$2" ]; then
+      convert_to_influx influx "$2" auto
     else
       echo "error: $2 not does not exist"
     fi

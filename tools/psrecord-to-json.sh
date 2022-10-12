@@ -19,6 +19,7 @@ converter() {
   cd "$WORKDIR"
   mode="$1"
   file="$2"
+  insert="$3"
   file_ns=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.txt|')
   file_ns_brisbane=$(echo "$file" | sed -e 's|.log|.time.nanoseconds_brisbane.txt|')
   file_ns_original=$(echo "$file" | sed -e 's|.log|.time.nanoseconds.original.txt|')
@@ -106,9 +107,19 @@ converter() {
       echo "     InfluxDB import queries"
       echo
       echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      if [[ "$insert" = 'auto' ]]; then
+        echo "     # create InfluxDB database: psrecord..."
+        # automatically run curl batch line insertions into InfluxDB database
+        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}'
+      fi
       find . -type f -name "*-split-*" | sort | while read f; do
         fn=$(basename $f)
         echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/$fn"
+        if [[ "$insert" = 'auto' ]]; then
+          echo "     # auto insert data into InfluxDB database: psrecord..."
+          # automatically run curl batch line insertions into InfluxDB database
+          curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}'
+        fi
       done
     else
       echo
@@ -120,9 +131,29 @@ converter() {
       echo "     InfluxDB import queries"
       echo
       echo "     curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      if [[ "$insert" = 'auto' ]]; then
+        echo "     # create InfluxDB database: psrecord..."
+        # automatically run curl batch line insertions into InfluxDB database
+        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}'
+      fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/cpuload.txt"
+      if [[ "$insert" = 'auto' ]]; then
+        echo "     #  auto insert data into InfluxDB database: psrecord..."
+        # automatically run curl batch line insertions into InfluxDB database
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/cpuload.txt | awk '{print "     " $0}'
+      fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/realmem.txt"
+      if [[ "$insert" = 'auto' ]]; then
+        echo "     #  auto insert data into InfluxDB database: psrecord..."
+        # automatically run curl batch line insertions into InfluxDB database
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/realmem.txt | awk '{print "     " $0}'
+      fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/virtualmem.txt"
+      if [[ "$insert" = 'auto' ]]; then
+        echo "     #  auto insert data into InfluxDB database: psrecord..."
+        # automatically run curl batch line insertions into InfluxDB database
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/virtualmem.txt | awk '{print "     " $0}'
+      fi
       echo
       echo "     Grafana Dashboard Time Frame"
       echo "     ?orgId=1&from=$file_start_timestamp_epoch&to=$file_end_timestamp"
@@ -171,6 +202,13 @@ case "$1" in
   influx )
     if [ -f "$2" ]; then
       converter influx "$2"
+    else
+      echo "error: $2 not does not exist"
+    fi
+    ;;
+  influx-auto )
+    if [ -f "$2" ]; then
+      converter influx "$2" auto
     else
       echo "error: $2 not does not exist"
     fi
