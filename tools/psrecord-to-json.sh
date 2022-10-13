@@ -110,7 +110,7 @@ converter() {
       if [[ "$insert" = 'auto' ]]; then
         echo "     # create InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database
-        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}'
+        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}' | head -n1
       fi
       find . -type f -name "*-split-*" | sort | while read f; do
         fn=$(basename $f)
@@ -118,7 +118,7 @@ converter() {
         if [[ "$insert" = 'auto' ]]; then
           echo "     # auto insert data into InfluxDB database: psrecord..."
           # automatically run curl batch line insertions into InfluxDB database
-          curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}'
+          curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}' | head -n1
         fi
       done
     else
@@ -134,25 +134,25 @@ converter() {
       if [[ "$insert" = 'auto' ]]; then
         echo "     # create InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database
-        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}'
+        curl -i -sX POST http://localhost:8186/query --data-urlencode "q=CREATE DATABASE psrecord" | awk '{print "     " $0}' | head -n1
       fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/cpuload.txt"
       if [[ "$insert" = 'auto' ]]; then
         echo "     #  auto insert data into InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database
-        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/cpuload.txt | awk '{print "     " $0}'
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/cpuload.txt | awk '{print "     " $0}' | head -n1
       fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/realmem.txt"
       if [[ "$insert" = 'auto' ]]; then
         echo "     #  auto insert data into InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database
-        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/realmem.txt | awk '{print "     " $0}'
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/realmem.txt | awk '{print "     " $0}' | head -n1
       fi
       echo "     curl -i -sX POST 'http://localhost:8186/write?db=psrecord' --data-binary @${WORKDIR}/virtualmem.txt"
       if [[ "$insert" = 'auto' ]]; then
         echo "     #  auto insert data into InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database
-        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/virtualmem.txt | awk '{print "     " $0}'
+        curl -i -sX POST "http://localhost:8186/write?db=psrecord" --data-binary @${WORKDIR}/virtualmem.txt | awk '{print "     " $0}' | head -n1
       fi
       echo
       echo "     Grafana Dashboard Time Frame"

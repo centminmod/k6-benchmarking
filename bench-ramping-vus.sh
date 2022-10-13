@@ -26,7 +26,7 @@ GZIP_HTTP='y'
 
 # 4 CPUS = 0-3
 # 2 CPUS = 0-1
-TASKSET_CPUS='0-3'
+TASKSET_CPUS='0-2'
 TASKSET_ENABLE='y'
 
 # local -out
@@ -96,6 +96,9 @@ convert_benchlog() {
   echo "     parsing & converting k6 JSON output log $input_output_file"
   echo "     to InfluxDB batch write format..."
   sleep 5
+  if [ -f ./tools/k6-log-to-influxdb.sh ]; then
+    chmod +x ./tools/k6-log-to-influxdb.sh
+  fi
   if [[ "$AUTO_INSERT_INFLUX_BATCH_DATA" = [yY] ]]; then
     echo "     ./tools/k6-log-to-influxdb.sh convert-auto $input_output_file"
     ./tools/k6-log-to-influxdb.sh convert-auto "$input_output_file"
@@ -107,12 +110,16 @@ convert_benchlog() {
 
 parse_psrecord() {
   input_psrecord_file="$1"
+  input_psrecord_sleep="$2"
   echo
   echo
   echo "     ##################################################################"
   echo "     parsing & converting nginx psrecord data..."
   echo "     waiting for psrecord to close its log..."
-  sleep 102
+  sleep $input_psrecord_sleep
+  if [ -f ./tools/psrecord-to-json.sh ]; then
+    chmod +x ./tools/psrecord-to-json.sh
+  fi
   if [[ "$AUTO_INSERT_INFLUX_BATCH_DATA" = [yY] ]]; then
     echo "     ./tools/psrecord-to-json.sh influx-auto $input_psrecord_file"
     ./tools/psrecord-to-json.sh influx-auto "$input_psrecord_file"
@@ -241,7 +248,7 @@ run_test() {
     ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
   if [ -n "$spid" ]; then
-    parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log"
+    parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log" $((PSRECORD_DELAY*2))
   fi
   if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
     convert_benchlog "${WORKDIR}/$LOCAL_OUT_FILENAME"

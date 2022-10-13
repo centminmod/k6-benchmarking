@@ -35,7 +35,7 @@ import { check } from "k6";
 import { group } from 'k6';
 import { sleep } from "k6";
 import { Trend } from "k6/metrics";
-import { Rate } from 'k6/metrics'
+// import { Rate } from 'k6/metrics'
 import http from "k6/http";
 import exec from "k6/execution";
 import { tagWithCurrentStageIndex } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
@@ -49,7 +49,7 @@ import {
 } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 // const durationInSeconds = new Trend("duration_in_seconds");
-let errorRate = new Rate('error_rate')
+// let errorRate = new Rate('check_errors')
 
 export const options = {
   scenarios: {
@@ -62,7 +62,7 @@ export const options = {
       timeUnit: '1s',
       duration: `${__ENV.STAGETIME}`,
       preAllocatedVUs: `${__ENV.REQRATE_USERS}`,
-      maxVUs: 2000,
+      maxVUs: 150000,
       gracefulStop:     '5s',
       tags: { executor: 'constant-arrival-rate' },
     },
@@ -145,8 +145,8 @@ export function handleSummary(data) {
 }
 
 export default function () {
-  const sleepMin = 1;
-  const sleepMax = 2;
+  const sleepMin = 1.5;
+  const sleepMax = 4.5;
   // tagWithCurrentStageIndex();
   // console.log(exec.test.options.scenarios.default.stages[0].target)
   // console.log(exec.instance.vusActive);
@@ -169,7 +169,7 @@ export default function () {
   check(res, {
     "is status 200": (r) => r.status === 200,
   });
-  errorRate.add(res.status >= 400);
+  // errorRate.add(res.status >= 400);
   // durationInSeconds.add(res.timings.duration / 1000);
   // sleep(1);
   sleep(randomIntBetween(sleepMin, sleepMax));
