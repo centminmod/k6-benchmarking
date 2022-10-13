@@ -7,6 +7,7 @@
   * [User Concurrency Benchmarks With Random Sleep](#user-concurrency-benchmarks-with-random-sleep)
   * [bench-ramping-vus.sh automated k6 benchmarking demo 1](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh.md)
   * [bench-ramping-vus.sh automated k6 benchmarking demo 2 + JSON log to InfluxDB batch line format](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh-2.md)
+  * [bench-ramping-vus.sh automated k6 benchmarking demo 3 + JSON log to InfluxDB batch line format](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh-3.md)
 * [InfluxDB + Grafana](#influxdb--grafana)
   * [Ramping VUs](#ramping-vus)
 * [k6 Log Parsing](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md)
