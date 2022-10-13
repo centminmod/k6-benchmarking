@@ -3,13 +3,13 @@
 # wrapper for k6 ramping-vus executor based benchmark-scenarios-multi.js
 # https://github.com/centminmod/k6-benchmarking
 ###############################################################################
-VER=0.5
+VER=0.7
 WORKDIR="/home/k6-workdir"
 SCRIPT_TESTNAME=ramping
 # starting VU count
 VU=0
 TIME=30
-REQRATE=1
+REQRATE=100
 STAGEVU1=25
 STAGEVU2=50
 STAGEVU3=100
@@ -33,7 +33,7 @@ TASKSET_ENABLE='y'
 ENABLE_LOCAL_OUT='y'
 
 # psrecord
-PSRECORD_DELAY='70'
+PSRECORD_DELAY='15'
 
 # InfluxDB data conversion
 CONVERT_JSONLOG_INFLUXDB='y'
@@ -128,11 +128,22 @@ end_test() {
   echo "k6 test completed"
 }
 
+cleanup() {
+  find "$WORKDIR" -type f -name "*-split-*" -delete
+  find "$WORKDIR" -type f -name "psrecord-ramping-*" -delete
+  find "$WORKDIR" -type f -name "filtered-*" -delete
+  find "$WORKDIR" -type f -name "influxdb-*" -delete  
+  rm -f filtered-vus.log filtered-metrics.log influxdb-vus.log influxdb-metrics.log summary-raw-scenarios-multi.gz
+  sleep 5
+}
+
 run_test() {
   INFLUXDB="$1"
   DOMAIN="$2"
   INPUT_TIME="$3"
   INPUT_STAGEVUS="$4"
+  INPUT_REQRATE="$5"
+  INPUT_VUS="$6"
 
   if [ -n "$INPUT_TIME" ]; then
     TIME="$INPUT_TIME"
@@ -143,6 +154,12 @@ run_test() {
     STAGEVU2="${STAGEVU_ARRAY[1]}"
     STAGEVU3="${STAGEVU_ARRAY[2]}"
     STAGEVU4="${STAGEVU_ARRAY[3]}"
+  fi
+  if [ -n "$INPUT_REQRATE" ]; then
+    REQRATE="$INPUT_REQRATE"
+  fi
+  if [ -n "$INPUT_VUS" ]; then
+    VUS="$INPUT_VUS"
   fi
 
   if [[ "$STAGEVU3" -le '299' ]]; then
@@ -204,14 +221,14 @@ run_test() {
   spid=$(cminfo service-info nginx | jq -r '.MainPID')
 
   if [ -n "$spid" ]; then
-    echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &"
-    psrecord $spid --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &
+    echo "psrecord $spid --include-children --interval 0.1 --duration $((TIME*6+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot $WORKDIR/plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &"
+    psrecord $spid --include-children --interval 0.1 --duration $((TIME*6+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log --plot $WORKDIR/plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.png &
     echo
   fi
   if [[ "$INFLUXDB" = [yY] ]]; then
     rm -f "psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log"
-    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png"
-    psrecord "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*5+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png
+    echo "psrecord \"${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js\" --include-children --interval 0.1 --duration $((TIME*6+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot $WORKDIR/plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png"
+    psrecord "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report --out influxdb=http://localhost:8186/k6 benchmark-scenarios-multi.js" --include-children --interval 0.1 --duration $((TIME*6+PSRECORD_DELAY)) --log ${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus.log --plot $WORKDIR/plot-${SCRIPT_TESTNAME}-${STAGEVU3}vus.png
   else
     if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
       # remove vu,tls_version,group,protocol from 
@@ -220,8 +237,8 @@ run_test() {
       # InfluxDB realtime ingestion is removed so no need to reduce tag count
       export K6_INFLUXDB_TAGS_AS_FIELDS=url
     fi
-    echo "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
-    ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
+    echo "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
+    ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
   if [ -n "$spid" ]; then
     parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log"
@@ -240,19 +257,25 @@ help() {
   echo "$0 run-influxdb https://domain.com"
   echo "$0 run-local https://domain.com TIME 25,50,100,0"
   echo "$0 run-influxdb https://domain.com TIME 25,50,100,0"
+  echo "$0 run-local https://domain.com TIME 25,50,100,0 REQRATE"
+  echo "$0 run-influxdb https://domain.com TIME 25,50,100,0 REQRATE"
+  echo "$0 run-local https://domain.com TIME 25,50,100,0 REQRATE REQRATE_USERS"
+  echo "$0 run-influxdb https://domain.com TIME 25,50,100,0 REQRATE REQRATE_USERS"
 }
 
 case "$1" in
   run-local )
     if [ -n "$2" ]; then
-      run_test n "$2" "$3" "$4"
+      cleanup
+      run_test n "$2" "$3" "$4" "$5" "$6"
     else
       help
     fi
     ;;
   run-influxdb )
     if [ -n "$2" ]; then
-      run_test y "$2" "$3" "$4"
+      cleanup
+      run_test y "$2" "$3" "$4" "$5" "$6"
     else
       help
     fi

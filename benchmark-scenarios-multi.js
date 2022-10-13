@@ -35,6 +35,7 @@ import { check } from "k6";
 import { group } from 'k6';
 import { sleep } from "k6";
 import { Trend } from "k6/metrics";
+import { Rate } from 'k6/metrics'
 import http from "k6/http";
 import exec from "k6/execution";
 import { tagWithCurrentStageIndex } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
@@ -48,22 +49,23 @@ import {
 } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 // const durationInSeconds = new Trend("duration_in_seconds");
+let errorRate = new Rate('error_rate')
 
 export const options = {
   scenarios: {
     // // scenario 1
     // https://k6.io/docs/using-k6/scenarios/executors/constant-arrival-rate
-    // constant_arrival_rate: {
-    //   executor: 'constant-arrival-rate',
-    //   startTime: '0s',
-    //   rate: `${__ENV.RPS}`,
-    //   timeUnit: '1s',
-    //   duration: `${__ENV.STAGETIME}`,
-    //   preAllocatedVUs: `${__ENV.USERS}`,
-    //   maxVUs: 1000,
-    //   gracefulStop:     '30s',
-    //   tags: { executor: 'constant-arrival-rate' },
-    // },
+    constant_arrival_rate: {
+      executor: 'constant-arrival-rate',
+      startTime: '0s',
+      rate: `${__ENV.RPS}`,
+      timeUnit: '1s',
+      duration: `${__ENV.STAGETIME}`,
+      preAllocatedVUs: `${__ENV.REQRATE_USERS}`,
+      maxVUs: 2000,
+      gracefulStop:     '5s',
+      tags: { executor: 'constant-arrival-rate' },
+    },
     // // scenario 2
     // https://k6.io/docs/using-k6/scenarios/executors/per-vu-iterations
     // per_vu_iterations: {
@@ -89,8 +91,8 @@ export const options = {
     // https://k6.io/docs/using-k6/scenarios/executors/ramping-vus
     ramping_vus: {
       executor: 'ramping-vus',
-      // startTime: `${__ENV.STAGETIME + 32}s`,
-      startTime: '0s',
+      startTime: `${__ENV.STAGETIME + 18}s`,
+      // startTime: '0s',
       startVUs: `${__ENV.USERS}` || 0,
       stages: [
         { duration: `${__ENV.STAGETIME}`, target: `${__ENV.STAGE_VU1}` },
@@ -98,8 +100,8 @@ export const options = {
         { duration: `${__ENV.STAGETIME}`, target: `${__ENV.STAGE_VU3}` },
         { duration: `${__ENV.STAGETIME}`, target: `${__ENV.STAGE_VU4}` },
       ],
-      gracefulRampDown: '60s',
-      gracefulStop:     '30s',
+      gracefulRampDown: '5s',
+      gracefulStop:     '5s',
       // tags: { executor: 'ramping-vus' },
     },
   },
@@ -144,16 +146,17 @@ export function handleSummary(data) {
 
 export default function () {
   const sleepMin = 1;
-  const sleepMax = 5;
-  tagWithCurrentStageIndex();
+  const sleepMax = 2;
+  // tagWithCurrentStageIndex();
   // console.log(exec.test.options.scenarios.default.stages[0].target)
   // console.log(exec.instance.vusActive);
   const params = {
     headers: {
-      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+      // accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
       "accept-encoding": "gzip, deflate",
-      "accept-language": "en-US,en;q=0.9",
-      connection: "keep-alive",
+      // "accept-language": "en-US,en;q=0.9",
+      "connection": "keep-alive",
+      "x-bench": "1",
     },
     // cookies: { my_cookie: 'value' },
     // redirects: 5,
@@ -166,7 +169,8 @@ export default function () {
   check(res, {
     "is status 200": (r) => r.status === 200,
   });
+  errorRate.add(res.status >= 400);
   // durationInSeconds.add(res.timings.duration / 1000);
   // sleep(1);
-  // sleep(randomIntBetween(sleepMin, sleepMax));
+  sleep(randomIntBetween(sleepMin, sleepMax));
 }
