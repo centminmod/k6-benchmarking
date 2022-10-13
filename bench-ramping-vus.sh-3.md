@@ -11,6 +11,10 @@ Usage:
 ./bench-ramping-vus.sh run-influxdb https://domain.com
 ./bench-ramping-vus.sh run-local https://domain.com TIME 25,50,100,0
 ./bench-ramping-vus.sh run-influxdb https://domain.com TIME 25,50,100,0
+./bench-ramping-vus.sh run-local https://domain.com TIME 25,50,100,0 REQRATE
+./bench-ramping-vus.sh run-influxdb https://domain.com TIME 25,50,100,0 REQRATE
+./bench-ramping-vus.sh run-local https://domain.com TIME 25,50,100,0 REQRATE REQRATE_USERS
+./bench-ramping-vus.sh run-influxdb https://domain.com TIME 25,50,100,0 REQRATE REQRATE_USERS
 ```
 ```
 ./bench-ramping-vus.sh run-local https://domain1.com 180 5000,10000,15000,0 5000 16000
