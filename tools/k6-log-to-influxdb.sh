@@ -6,7 +6,7 @@
 # https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md
 ###############################################################################
 # break to 5000 size batches for InfluxDB
-SPLITSIZE='5000'
+SPLITSIZE='20000'
 INFLUXDB_NAME='k6'
 INFLUXDB_PORT='8186'
 INFLUXDB_HOST='localhost'

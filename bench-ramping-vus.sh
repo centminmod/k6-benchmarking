@@ -26,7 +26,7 @@ GZIP_HTTP='y'
 
 # 4 CPUS = 0-3
 # 2 CPUS = 0-1
-TASKSET_CPUS='0-2'
+TASKSET_CPUS='0-3'
 TASKSET_ENABLE='y'
 
 # local -out
