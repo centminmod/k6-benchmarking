@@ -139,7 +139,8 @@ cleanup() {
   find "$WORKDIR" -type f -name "*-split-*" -delete
   find "$WORKDIR" -type f -name "psrecord-ramping-*" -delete
   find "$WORKDIR" -type f -name "filtered-*" -delete
-  find "$WORKDIR" -type f -name "influxdb-*" -delete  
+  find "$WORKDIR" -type f -name "influxdb-*" -delete
+  find "$WORKDIR" -type f -name "*-nginx.png" -delete
   rm -f filtered-vus.log filtered-metrics.log influxdb-vus.log influxdb-metrics.log summary-raw-scenarios-multi.gz
   sleep 5
 }
