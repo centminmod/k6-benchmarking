@@ -57,6 +57,7 @@ export const options = {
     // https://k6.io/docs/using-k6/scenarios/executors/constant-arrival-rate
     constant_arrival_rate: {
       executor: 'constant-arrival-rate',
+      exec:     'constantarrival',
       startTime: '0s',
       rate: `${__ENV.RPS}`,
       timeUnit: '1s',
@@ -91,6 +92,7 @@ export const options = {
     // https://k6.io/docs/using-k6/scenarios/executors/ramping-vus
     ramping_vus: {
       executor: 'ramping-vus',
+      exec:     'default',
       startTime: `${__ENV.STAGETIME + 18}s`,
       // startTime: '0s',
       startVUs: `${__ENV.USERS}` || 0,
@@ -102,7 +104,7 @@ export const options = {
       ],
       gracefulRampDown: '5s',
       gracefulStop:     '5s',
-      // tags: { executor: 'ramping-vus' },
+      tags: { executor: 'ramping-vus' },
     },
   },
   // httpDebug: 'full',
@@ -156,7 +158,7 @@ export default function () {
       "accept-encoding": "gzip, deflate",
       // "accept-language": "en-US,en;q=0.9",
       "connection": "keep-alive",
-      "x-bench": "1",
+      "x-bench": "rampingvus",
     },
     // cookies: { my_cookie: 'value' },
     // redirects: 5,
@@ -173,4 +175,35 @@ export default function () {
   // durationInSeconds.add(res.timings.duration / 1000);
   // sleep(1);
   sleep(randomIntBetween(sleepMin, sleepMax));
+}
+
+export function constantarrival() {
+  // const sleepMin = 1.5;
+  // const sleepMax = 4.5;
+  // tagWithCurrentStageIndex();
+  // console.log(exec.test.options.scenarios.default.stages[0].target)
+  // console.log(exec.instance.vusActive);
+  const params = {
+    headers: {
+      // accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+      "accept-encoding": "gzip, deflate",
+      // "accept-language": "en-US,en;q=0.9",
+      "connection": "keep-alive",
+      "x-bench": "constantarrival",
+    },
+    // cookies: { my_cookie: 'value' },
+    // redirects: 5,
+    // tags: { 
+    //   gzip: 'yes'
+    // }
+  };
+  const res = http.get(`${__ENV.URL}`, params);
+  // console.log('Response time was ' + String(res.timings.duration) + ' ms');
+  check(res, {
+    "is status 200": (r) => r.status === 200,
+  });
+  // errorRate.add(res.status >= 400);
+  // durationInSeconds.add(res.timings.duration / 1000);
+  // sleep(1);
+  // sleep(randomIntBetween(sleepMin, sleepMax));
 }

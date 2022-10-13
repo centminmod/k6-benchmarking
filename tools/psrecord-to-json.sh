@@ -106,7 +106,7 @@ converter() {
       echo
       echo "     InfluxDB import queries"
       echo
-      echo "curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
+      echo "     curl -i -sX POST http://localhost:8186/query --data-urlencode \"q=CREATE DATABASE psrecord\""
       if [[ "$insert" = 'auto' ]]; then
         echo "     # create InfluxDB database: psrecord..."
         # automatically run curl batch line insertions into InfluxDB database

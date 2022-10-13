@@ -56,7 +56,28 @@ convert_to_influx() {
       fdirname=$(dirname "$c")
       fbasename=$(basename "$c")
       counter=$(cat "$c"|wc -l)
+      if [[ "$counter" -le '999999' ]]; then
+        SPLITSIZE='10000'
+      elif [[ "$counter" -ge '1000000' && "$counter" -le '4999999' ]]; then
+        SPLITSIZE='20000'
+      elif [[ "$counter" -ge '5000000' && "$counter" -le '9999999' ]]; then
+        SPLITSIZE='30000'
+      elif [[ "$counter" -ge '10000000' && "$counter" -le '14999999' ]]; then
+        SPLITSIZE='40000'
+      elif [[ "$counter" -ge '15000000' ]]; then
+        SPLITSIZE='50000'
+      fi
       if [[ "$counter" -gt "$SPLITSIZE" ]]; then
+        numberfiles=$(($counter/$SPLITSIZE))
+        if [[ "$numberfiles" -le '100' ]]; then
+          insert_sleep=0.25
+        elif [[ "$numberfiles" -ge '101' && "$numberfiles" -le '199' ]]; then
+          insert_sleep=0.50
+        elif [[ "$numberfiles" -ge '200' && "$numberfiles" -le '299' ]]; then
+          insert_sleep=0.75
+        elif [[ "$numberfiles" -ge '300' ]]; then
+          insert_sleep=1.00
+        fi
         # remove previous files
         find $fdirname -type f -name "${fbasename}-split-*" -delete
         split -l "$SPLITSIZE" $c ${fbasename}-split-
@@ -88,6 +109,7 @@ convert_to_influx() {
               echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
             # automatically run curl batch line insertions into InfluxDB database
             curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}' | head -n1
+            sleep "$insert_sleep"
             fi
           else
             echo "     ${WORKDIR}/$fn (error: missing)"
