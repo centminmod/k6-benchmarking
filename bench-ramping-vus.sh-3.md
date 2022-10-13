@@ -2123,6 +2123,16 @@ For Nginx web server tested CPU and Memory usage
 
 ![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-oct14-2022-01.png)
 
+original psrecord plot created chart
+
+![psrecord nginx](/screenshots/psrecord/psrecord-influxdb-grafana-nginx-oct14-2022-02.png)
+
+k6 HTML report
+
+![k6 HTML report](/screenshots/htmlreports/k6-htmlreport-oct14-2022-01.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-htmlreport-oct14-2022-02.png)
+
 For k6 benchmark data
 
 ![InfluxDB/Grafana](/screenshots/influxdb-grafana/k6-influxdb-grafana-ramping-vus-oct14-2022-01.png)
