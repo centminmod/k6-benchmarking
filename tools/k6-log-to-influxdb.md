@@ -1,4 +1,4 @@
-Take k6 run with `--out json=summary-raw-scenarios-multi.gz` JSON logged output and convert it into [InfluxDB 1.8 batch line write format](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) for post-k6 run insertion into InfluxDB 1.8 database.
+Take k6 run with `--out json=summary-raw-scenarios-multi.gz` JSON logged output and [convert](#convert) or [convert + auto insert data](#convert-auto) into [InfluxDB 1.8 batch line write format](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) for post-k6 run insertion into InfluxDB 1.8 database.
 
 ```
 ./k6-log-to-influxdb.sh 
@@ -109,4 +109,4 @@ Where the line after curl is the curl HTTP response
 HTTP 1.1 204 d:0 u:570869 97f3c5c6-4baa-11ed-beed-0242ac120005
 ```
 
-Referring to HTTP/1.1 protocol and version with HTTP 204 response code and download = 0 bytes, upload = 570,869 bytes and the string is the `x-influxdb-request-id`. If an error occurs, the error message would be listed after this `x-influxdb-request-id` output.
+Referring to HTTP/1.1 protocol and version with HTTP 204 response code and download = 0 bytes, upload = 570,869 bytes and the string is the `x-influxdb-request-id`. If an error occurs, the error message would be listed after this `x-influxdb-request-id` output which refers to the `x-influxdb-error` response header.
