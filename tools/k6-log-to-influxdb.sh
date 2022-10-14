@@ -144,6 +144,7 @@ help() {
   echo "Usage:"
   echo
   echo "$0 convert /path/to/summary-raw-scenarios-multi.gz"
+  echo "$0 convert-auto /path/to/summary-raw-scenarios-multi.gz"
 }
 
 case "$1" in

@@ -6,6 +6,7 @@ Take k6 run with `--out json=summary-raw-scenarios-multi.gz` JSON logged output 
 Usage:
 
 ./k6-log-to-influxdb.sh convert /path/to/summary-raw-scenarios-multi.gz
+./k6-log-to-influxdb.sh convert-auto /path/to/summary-raw-scenarios-multi.gz
 ```
 
 Converted VUs log `/home/k6-workdir/influxdb-vus.log` sample:
