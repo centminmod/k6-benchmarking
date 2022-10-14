@@ -10,7 +10,7 @@
   * [bench-ramping-vus.sh automated k6 benchmarking demo 3 + JSON log to InfluxDB batch line format](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh-3.md)
 * [InfluxDB + Grafana](#influxdb--grafana)
   * [Ramping VUs](#ramping-vus)
-* [k6 Log Parsing](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md)
+* [k6 Log Parsing Into InfluxDB Batch Line Format](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md)
 
 # Install
 

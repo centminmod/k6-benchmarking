@@ -28,7 +28,7 @@ json2jqpath sample-output-http-duration-log.log
 .type
 ```
 
-# Parsing Info InfluxDB InfluxQL Batch Write Format
+# Parsing Into InfluxDB InfluxQL Batch Write Format
 
 The [InfluxDB batch write fromatted](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) files will be inserted into `k6` named InfluxDB database running on port 8186 according to [InfluxDB line protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/). I also wrote a [k6-log-to-influxdb.sh](https://github.com/centminmod/k6-benchmarking/blob/master/tools/k6-log-to-influxdb.md) tool to do this automatically.
 
