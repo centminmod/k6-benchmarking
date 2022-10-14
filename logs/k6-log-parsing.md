@@ -32,6 +32,10 @@ json2jqpath sample-output-http-duration-log.log
 
 The [InfluxDB batch write fromatted](https://docs.influxdata.com/influxdb/v1.8/guides/write_data/#writing-points-from-a-file) files will be inserted into `k6` named InfluxDB database running on port 8186 according to [InfluxDB line protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/). I also wrote a [k6-log-to-influxdb.sh](https://github.com/centminmod/k6-benchmarking/blob/master/tools/k6-log-to-influxdb.md) tool to do this automatically.
 
+Why do this as opposed to using k6's native `--out influxdb=http://localhost:8186/k6` to send k6 data directly to InfluxDB database? To be handle higher concurrency load tests with k6. At higher concurrency load tests, k6 is sending too much data that InfluxDB isn't able to keep up with the ingestion of that data for my particular server - a Intel i7 4790K with 32GB memory and 2x 240GB Samsung Enterprise SSDs. Using k6's native `--out influxdb=http://localhost:8186/k6` I could reach around 2000 VU users concurrency before InfluxDB couldn't keep up and some data didn't get into InfluxDB and show as missing data points in Grafana. To reach 2000 VUs I also had to remove some of the default k6 tags/fields to reduce the data set size being sent to InfluxDB.
+
+However, using [k6-log-to-influxdb.sh](https://github.com/centminmod/k6-benchmarking/blob/master/tools/k6-log-to-influxdb.md) tool to do the InfluxDB data insertion after the k6 runs, allowed me to scale up to 16.000 VU users easily (system memory limited) and also not have to remove default tags and even add more tags I needed to track metrics if needed. You can see a demo of this at [here](https://github.com/centminmod/k6-benchmarking/blob/master/bench-ramping-vus.sh-3.md).
+
 ```
 curl -i -sX POST 'http://localhost:8186/write?db=k6' --data-binary @metric_name.txt
 ```
