@@ -8,6 +8,8 @@ WORKDIR="/home/k6-workdir"
 SCRIPT_TESTNAME=ramping
 # starting VU count
 VU=0
+# constant arrival rate VUs
+VUS=10
 TIME=30
 REQRATE=100
 STAGEVU1=25

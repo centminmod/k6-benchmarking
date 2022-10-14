@@ -97,18 +97,18 @@ convert_to_influx() {
         echo
         echo "     curl -i -sX POST http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query --data-urlencode \"q=CREATE DATABASE "$INFLUXDB_NAME"\""
         if [[ "$insert" = 'auto' ]]; then
-          echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
+          # echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
           # automatically run curl batch line insertions into InfluxDB database
-          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}' | head -n1
+          curl -i -w 'HTTP %{http_version} %{http_code} d:%{size_download} u:%{size_upload} %header{x-request-id}' -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}' | tail -1
         fi
         find $fdirname -type f -name "*-split-*" | sort | while read f; do
           fn=$(basename $f)
           if [ -f "${WORKDIR}/$fn" ]; then
             echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @${WORKDIR}/$fn"
             if [[ "$insert" = 'auto' ]]; then
-              echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
+              # echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
             # automatically run curl batch line insertions into InfluxDB database
-            curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}' | head -n1
+            curl -i -w 'HTTP %{http_version} %{http_code} d:%{size_download} u:%{size_upload} %header{x-request-id}' -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @${WORKDIR}/$fn | awk '{print "     " $0}' | tail -1
             sleep "$insert_sleep"
             fi
           else
@@ -124,15 +124,15 @@ convert_to_influx() {
         echo
         echo "     curl -i -sX POST http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query --data-urlencode \"q=CREATE DATABASE "$INFLUXDB_NAME"\""
         if [[ "$insert" = 'auto' ]]; then
-          echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
+          # echo "     # create InfluxDB database: ${INFLUXDB_NAME}..."
           # automatically run curl batch line insertions into InfluxDB database
-          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}' | head -n1
+          curl -i -w 'HTTP %{http_version} %{http_code} d:%{size_download} u:%{size_upload} %header{x-request-id}' -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/query" --data-urlencode "q=CREATE DATABASE $INFLUXDB_NAME" | awk '{print "     " $0}' | tail -1
         fi
         echo "     curl -i -sX POST 'http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db="$INFLUXDB_NAME"' --data-binary @$c"
         if [[ "$insert" = 'auto' ]]; then
-          echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
+          # echo "     # auto insert ${WORKDIR}/$fn into InfluxDB database: ${INFLUXDB_NAME}..."
           # automatically run curl batch line insertions into InfluxDB database
-          curl -i -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @$c | awk '{print "     " $0}' | head -n1
+          curl -i -w 'HTTP %{http_version} %{http_code} d:%{size_download} u:%{size_upload} %header{x-request-id}' -sX POST "http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/write?db=$INFLUXDB_NAME" --data-binary @$c | awk '{print "     " $0}' | tail -1
         fi
       fi
     done
