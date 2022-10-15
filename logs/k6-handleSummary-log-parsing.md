@@ -564,7 +564,7 @@ cat summary-scenarios-htmlreport.json | jq -r '.metrics | [ ."http_reqs", ."http
 Into CSV format
 
 ```
-at summary-scenarios-htmlreport.json | jq -r '.metrics | [ ."http_reqs", ."http_req_duration{expected_response:true}" ] | .[]' | jq -n 'reduce inputs as $item ({}; . *= $item) | .values' | jq 'to_entries|map(.key),(map(.value)) | @csv' | sed -e 's|\"||g' -e 's|\\||g'
+cat summary-scenarios-htmlreport.json | jq -r '.metrics | [ ."http_reqs", ."http_req_duration{expected_response:true}" ] | .[]' | jq -n 'reduce inputs as $item ({}; . *= $item) | .values' | jq 'to_entries|map(.key),(map(.value)) | @csv' | sed -e 's|\"||g' -e 's|\\||g'
 
 count,rate,p(95),p(99),p(99.99),avg,min,med,max
 23,0.7261743194872999,0.5978299999999999,1.0366507200000006,1.158166567199999,0.42048634782608696,0.239758,0.341306,1.159394

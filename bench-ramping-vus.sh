@@ -91,6 +91,13 @@ start_test() {
   sleep 10
 }
 
+handlesummary_parsed() {
+  input_summary=$1
+  echo "     ##################################################################"
+  cat $input_summary | jq -r '.metrics | [ ."http_reqs", ."http_req_duration{expected_response:true}" ] | .[]' | jq -n 'reduce inputs as $item ({}; . *= $item) | .values' | jq 'to_entries|map(.key),(map(.value)) | @tsv' | sed -e 's|\\t| |g' -e 's|\"||g' | column -t | awk '{print "     " $0}'
+  echo
+}
+
 convert_benchlog() {
   input_output_file="$1"
   echo
@@ -250,14 +257,15 @@ run_test() {
     echo "${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js"
     ${TASKSET_OPT}k6 run${VOPT}${GLOBAL_TAG_OPTS} -e RPS=${REQRATE} -e REQRATE_USERS=${VUS} -e USERS=${VU} -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e URL=$DOMAIN --no-usage-report ${LOCAL_OUT_OPT}benchmark-scenarios-multi.js
   fi
+  if [ -f summary-scenarios-htmlreport.json ]; then
+    mv -f summary-scenarios-htmlreport.json "${WORKDIR}/summary-scenarios-htmlreport.json"
+    handlesummary_parsed "${WORKDIR}/summary-scenarios-htmlreport.json"
+  fi
   if [ -n "$spid" ]; then
     parse_psrecord "${WORKDIR}/psrecord-${SCRIPT_TESTNAME}-${STAGEVU3}vus-nginx.log" $((PSRECORD_DELAY*2))
   fi
   if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
     convert_benchlog "${WORKDIR}/$LOCAL_OUT_FILENAME"
-  fi
-  if [ -f summary-scenarios-htmlreport.json ]; then
-    mv -f summary-scenarios-htmlreport.json "${WORKDIR}/summary-scenarios-htmlreport.json"
   fi
   end_test
 }
