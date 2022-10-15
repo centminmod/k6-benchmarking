@@ -156,7 +156,9 @@ converter() {
       fi
       echo
       echo "     Grafana Dashboard Time Frame"
-      echo "     ?orgId=1&from=$file_start_timestamp_epoch&to=$file_end_timestamp"
+      gf_file_start_timestamp_epoch=$((file_start_timestamp_epoch*1000))
+      gf_file_end_timestamp=$((file_end_timestamp*1000))
+      echo "     ?orgId=1&from=$gf_file_start_timestamp_epoch&to=$gf_file_end_timestamp"
     fi
   fi
 }
