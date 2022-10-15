@@ -11,6 +11,7 @@
 * [InfluxDB + Grafana](#influxdb--grafana)
   * [Ramping VUs](#ramping-vus)
 * [k6 Log Parsing Into InfluxDB Batch Line Format](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-log-parsing.md)
+* [k6 handleSummary JSON Log Parsing](https://github.com/centminmod/k6-benchmarking/blob/master/logs/k6-handleSummary-log-parsing.md)
 
 # Install
 

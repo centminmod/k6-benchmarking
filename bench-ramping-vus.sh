@@ -3,7 +3,7 @@
 # wrapper for k6 ramping-vus executor based benchmark-scenarios-multi.js
 # https://github.com/centminmod/k6-benchmarking
 ###############################################################################
-VER=0.7
+VER=0.8
 WORKDIR="/home/k6-workdir"
 SCRIPT_TESTNAME=ramping
 # starting VU count
@@ -255,6 +255,9 @@ run_test() {
   fi
   if [[ "$INFLUXDB" != [yY] && "$CONVERT_JSONLOG_INFLUXDB" = [yY] ]]; then
     convert_benchlog "${WORKDIR}/$LOCAL_OUT_FILENAME"
+  fi
+  if [ -f summary-scenarios-htmlreport.json ]; then
+    mv -f summary-scenarios-htmlreport.json "${WORKDIR}/summary-scenarios-htmlreport.json"
   fi
   end_test
 }
