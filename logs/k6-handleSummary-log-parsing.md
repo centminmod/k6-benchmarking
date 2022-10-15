@@ -474,18 +474,18 @@ cat summary-scenarios-htmlreport.json | jq -r '.metrics'
 CSV formatted `http_req_duration{expected_response:true}` metrics
 
 ```
-cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_req_duration{expected_response:true}".values | to_entries|map(.key),(map(.value)) | @csv'
+cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_req_duration{expected_response:true}".values | to_entries|map(.key),(map(.value)) | @csv' | sed -e 's|\"||g'
 
-"p(95)","p(99)","p(99.99)","count","avg","min","med","max"
+p(95),p(99),p(99.99),count,avg,min,med,max
 0.5978299999999999,1.0366507200000006,1.158166567199999,23,0.42048634782608696,0.239758,0.341306,1.159394
 ```
 
 sorted
 
 ```
-cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_req_duration{expected_response:true}".values | to_entries|map(.key),(map(.value)) | sort | @csv'
+cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_req_duration{expected_response:true}".values | to_entries|map(.key),(map(.value)) | sort | @csv' | sed -e 's|\"||g'
 
-"avg","count","max","med","min","p(95)","p(99)","p(99.99)"
+avg,count,max,med,min,p(95),p(99),p(99.99)
 0.239758,0.341306,0.42048634782608696,0.5978299999999999,1.0366507200000006,1.158166567199999,1.159394,23
 ```
 
@@ -501,9 +501,9 @@ p(95)               p(99)               p(99.99)           count  avg           
 CSV formatted `http_reqs` metrics
 
 ```
-cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_reqs".values | to_entries|map(.key),(map(.value)) | @csv'
+cat summary-scenarios-htmlreport.json | jq -r '.metrics | ."http_reqs".values | to_entries|map(.key),(map(.value)) | @csv' | sed -e 's|\"||g'
 
-"count","rate"
+count,rate
 23,0.7261743194872999
 ```
 
