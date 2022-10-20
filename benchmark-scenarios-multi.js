@@ -175,6 +175,7 @@ export default function () {
   // durationInSeconds.add(res.timings.duration / 1000);
   // sleep(1);
   sleep(randomIntBetween(sleepMin, sleepMax));
+  // console.log(`[t=${(new Date()) - exec.scenario.startTime}ms] VU{${exec.vu.idInTest}} ran iteration ${exec.scenario.iterationInTest}`);
 }
 
 export function constantarrival() {
@@ -206,4 +207,5 @@ export function constantarrival() {
   // durationInSeconds.add(res.timings.duration / 1000);
   // sleep(1);
   // sleep(randomIntBetween(sleepMin, sleepMax));
+  // console.log(`[t=${(new Date()) - exec.scenario.startTime}ms] VU{${exec.vu.idInTest}} ran iteration ${exec.scenario.iterationInTest}`);
 }

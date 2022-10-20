@@ -93,6 +93,8 @@ start_test() {
 
 handlesummary_parsed() {
   input_summary=$1
+  echo
+  echo
   echo "     ##################################################################"
   cat $input_summary | jq -r '.metrics | [ ."http_reqs", ."http_req_duration{expected_response:true}" ] | .[]' | jq -n 'reduce inputs as $item ({}; . *= $item) | .values' | jq 'to_entries|map(.key),(map(.value)) | @tsv' | sed -e 's|\\t| |g' -e 's|\"||g' | column -t | awk '{print "     " $0}'
   echo
