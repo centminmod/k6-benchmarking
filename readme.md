@@ -17,15 +17,29 @@
 
 * https://k6.io/docs/getting-started/installation/#linux
 
+
+## Debian/Ubuntu
+
 ```
-wget -4 https://github.com/grafana/k6/releases/download/v0.40.0/k6-v0.40.0-linux-amd64.tar.gz -O k6-v0.40.0-linux-amd64.tar.gz
-tar xvzf k6-v0.40.0-linux-amd64.tar.gz
-\cp -af k6-v0.40.0-linux-amd64/k6 /usr/local/bin/k6
-rm -rf k6-v0.40.0-linux-amd64/k6
+sudo gpg -k
+sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update
+sudo apt-get install k6
 ```
+
+## Fedora/CentOS
+
+Using dnf (or yum on older versions):
+
+```
+sudo dnf install https://dl.k6.io/rpm/repo.rpm
+sudo dnf install k6
+```
+
 ```
 k6 version
-k6 v0.40.0 (2022-09-08T09:06:02+0000/v0.39.0-92-gdcbe2f9c, go1.18.6, linux/amd64)
+k6 v0.49.0 (commit/b5328aa782, go1.21.6, linux/amd64
 ```
 ```
 k6 --help
@@ -43,13 +57,13 @@ Available Commands:
   archive     Create an archive
   cloud       Run a test on the cloud
   completion  Generate the autocompletion script for the specified shell
-  convert     Convert a HAR file to a k6 script
   help        Help about any command
   inspect     Inspect a script or archive
   login       Authenticate with a service
+  new         Create and initialize a new k6 script
   pause       Pause a running test
   resume      Resume a paused test
-  run         Start a load test
+  run         Start a test
   scale       Scale a running test
   stats       Show test metrics
   status      Show test status
@@ -62,8 +76,10 @@ Flags:
       --log-format string   log output format
       --log-output string   change the output for k6 logs, possible values are stderr,stdout,none,loki[=host:port],file[=./path.fileformat] (default "stderr")
       --no-color            disable colored output
+      --profiling-enabled   enable profiling (pprof) endpoints, k6's REST API should be enabled as well
   -q, --quiet               disable progress updates
   -v, --verbose             enable verbose logging
+      --version             version for k6
 
 Use "k6 [command] --help" for more information about a command.
 ```
