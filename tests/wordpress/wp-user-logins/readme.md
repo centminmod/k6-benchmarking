@@ -276,3 +276,9 @@ cat summary-scenarios-htmlreport.json | jq -r
   }
 }
 ```
+
+k6 HTML report
+
+![k6 HTML report](/screenshots/htmlreports/k6-htmlreport-feb-29-2024-01.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-htmlreport-feb-29-2024-02.png)
