@@ -78,20 +78,10 @@ else
     exit 1
 fi
 
-# Perform backup or restore operation based on argument
-if [ "${operation}" == "backup" ]; then
-    backup_users
-elif [ "${operation}" == "restore" ]; then
-    restore_users
-else
-    echo "Invalid operation. Use -b 'backup' or -b 'restore'."
-    exit 1
-fi
-
 # Create users using WP CLI (only if not performing backup or restore operation)
 if [ -z "${operation}" ] || [ "${operation}" != "backup" ] && [ "${operation}" != "restore" ]; then
     for (( i=1; i<=users; i++ )); do
-        wp user create "test${i}" "test${i}@${domain}" --role=subscriber --user_pass=3405691582 --allow-root
+        wp user create "test${i}" "test${i}@${domain}" --role=subscriber --user_pass=3405691999 --allow-root
         if [ $? -eq 0 ]; then
             echo "Successfully created user test${i}"
         else
@@ -99,4 +89,12 @@ if [ -z "${operation}" ] || [ "${operation}" != "backup" ] && [ "${operation}" !
         fi
     done
     echo "Completed creating ${users} users."
+elif [ "${operation}" == "backup" ]; then
+    backup_users
+elif [ "${operation}" == "restore" ]; then
+    restore_users
+else
+    echo "Invalid operation. Use -b 'backup' or -b 'restore'."
+    exit 1
+fi
 fi
