@@ -97,4 +97,3 @@ else
     echo "Invalid operation. Use -b 'backup' or -b 'restore'."
     exit 1
 fi
-fi

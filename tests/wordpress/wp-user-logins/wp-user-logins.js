@@ -8,8 +8,8 @@ import {
 
 export let options = {
     stages: [
-        { duration: '45s', target: 10 }, // Ramp up to 10 users
-        { duration: '60', target: 10 }, // Stay at 10 users
+        { duration: '45s', target: 100 }, // Ramp up to 10 users
+        { duration: '60', target: 100 }, // Stay at 10 users
         { duration: '15s', target: 0 },  // Ramp down to 0 users
     ],
     discardResponseBodies: true,
