@@ -42,7 +42,7 @@ import { htmlReport } from "https://raw.githubusercontent.com/centminmod/k6-repo
 import {
   jUnit,
   textSummary,
-} from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
+} from "https://jslib.k6.io/k6-summary/0.1.0/index.js";
 
 export const options = {
   // // scenario 1
