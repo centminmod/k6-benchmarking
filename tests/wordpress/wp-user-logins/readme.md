@@ -2,8 +2,71 @@
 k6 version
 k6 v0.49.0 (commit/b5328aa782, go1.21.6, linux/amd64)
 ```
+
+# Multi Scenario - Ramping VUs + Constant Request Rate
+
 ```
-K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html k6 run -e SITE_URL=https://wpel9.domain.com wp-user-login.js --insecure-skip-tls-verify
+VU=75; REQRATE=50; TIME=60; STAGEVU1=25; STAGEVU2=75; STAGEVU3=150; STAGEVU4=0; DOMAIN=https://wpel9.domain.com/
+
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e REQRATE_USERS=${VU} -e RPS=$REQRATE -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e SITE_URL=$DOMAIN wp-user-login-multi.js
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+     execution: local
+        script: wp-user-login-multi.js
+ web dashboard: http://127.0.0.1:5665
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 1000 max VUs, 5m25s max duration (incl. graceful stop):
+              * constant_arrival_rate: 50.00 iterations/s for 1m0s (maxVUs: 75-1000, exec: constantarrival, gracefulStop: 5s)
+              * ramping_vus: Up to 150 looping VUs for 4m0s over 4 stages (gracefulRampDown: 5s, exec: default, startTime: 1m20s, gracefulStop: 5s)
+
+INFO[0321] [k6-reporter v2.3.0] Generating HTML summary report  source=console
+     ✓ constant: is status 200
+     ✓ ramping: is status 200
+
+     checks.........................: 100.00% ✓ 14966     ✗ 0    
+     data_received..................: 44 MB   136 kB/s
+     data_sent......................: 3.2 MB  9.9 kB/s
+     http_req_blocked...............: avg=94.1µs   min=149ns   med=545ns    max=48.45ms p(95)=974ns    p(99)=1.44ms   p(99.99)=36.61ms count=14966
+     http_req_connecting............: avg=29.99µs  min=0s      med=0s       max=28.4ms  p(95)=0s       p(99)=124.29µs p(99.99)=24.51ms count=14966
+     http_req_duration..............: avg=373.07ms min=47.5ms  med=164.47ms max=1.98s   p(95)=1.19s    p(99)=1.45s    p(99.99)=1.87s   count=14966
+       { expected_response:true }...: avg=373.07ms min=47.5ms  med=164.47ms max=1.98s   p(95)=1.19s    p(99)=1.45s    p(99.99)=1.87s   count=14966
+     http_req_failed................: 0.00%   ✓ 0         ✗ 14966
+     http_req_receiving.............: avg=66.14µs  min=15.08µs med=56.07µs  max=26.79ms p(95)=94.61µs  p(99)=154.76µs p(99.99)=11.01ms count=14966
+     http_req_sending...............: avg=141.38µs min=32.99µs med=79.87µs  max=32.78ms p(95)=147.58µs p(99)=1.27ms   p(99.99)=31.37ms count=14966
+     http_req_tls_handshaking.......: avg=58.59µs  min=0s      med=0s       max=37.33ms p(95)=0s       p(99)=1.2ms    p(99.99)=29.33ms count=14966
+     http_req_waiting...............: avg=372.86ms min=47.38ms med=164.26ms max=1.98s   p(95)=1.19s    p(99)=1.45s    p(99.99)=1.87s   count=14966
+     http_reqs......................: 14966   46.742544/s
+     iteration_duration.............: avg=1.37s    min=1.04s   med=1.16s    max=2.98s   p(95)=2.19s    p(99)=2.46s    p(99.99)=2.87s   count=14966
+     iterations.....................: 14966   46.742544/s
+     vus............................: 3       min=0       max=150
+
+running (5m20.2s), 0000/0150 VUs, 14966 complete and 0 interrupted iterations
+constant_arrival_rate ✓ [=========] 0000/0075 VUs  1m0s  50.00 iters/s
+ramping_vus           ✓ [=========] 000/150 VUs    4m0s 
+```
+
+k6 HTML report
+
+![k6 HTML report](/screenshots/htmlreports/k6-web-dashboard-mar1-multi-2024-01.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-web-dashboard-mar1-multi-2024-02.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-web-dashboard-mar1-multi-2024-03.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-web-dashboard-mar1-multi-2024-04.png)
+
+![k6 HTML report](/screenshots/htmlreports/k6-web-dashboard-mar1-multi-2024-05.png)
+
+# Single Ramping Scenario
+
+```
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html taskset -c 0-3 k6 run -e SITE_URL=https://wpel9.domain.com wp-user-login.js --insecure-skip-tls-verify
 
           /\      |‾‾| /‾‾/   /‾‾/   
      /\  /  \     |  |/  /   /  /    

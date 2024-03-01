@@ -1,4 +1,4 @@
-// VU=100; REQRATE=100; TIME=30; STAGEVU1=50; STAGEVU2=100; STAGEVU3=200; STAGEVU4=0; DOMAIN=https://wpel9.domain.com/
+// VU=50; REQRATE=100; TIME=60; STAGEVU1=25; STAGEVU2=75; STAGEVU3=150; STAGEVU4=0; DOMAIN=https://wpel9.domain.com/
 // K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html taskset -c 0-3 k6 run -e RPS=${REQRATE} -e USERS=${VU} -e REQRATE_USERS=${VU} -e RPS=$REQRATE -e STAGETIME=${TIME}s -e STAGE_VU1=${STAGEVU1} -e STAGE_VU2=${STAGEVU2} -e STAGE_VU3=${STAGEVU3} -e STAGE_VU4=${STAGEVU4} -e SITE_URL=$DOMAIN wp-user-login-multi.js
 // https://jslib.k6.io/
 
@@ -18,22 +18,10 @@ export let options = {
     scenarios: {
         // // scenario 1
         // https://k6.io/docs/using-k6/scenarios/executors/constant-arrival-rate
-        constant_arrival_rate: {
-        executor: 'constant-arrival-rate',
-        exec:     'constantarrival',
-        startTime: '0s',
-        rate: `${__ENV.RPS}`,
-        timeUnit: '1s',
-        duration: `${__ENV.STAGETIME}`,
-        preAllocatedVUs: `${__ENV.REQRATE_USERS}`,
-        maxVUs: 1000,
-        gracefulStop:     '5s',
-        tags: { executor: 'constant-arrival-rate' },
-        },
         ramping_vus: {
         executor: 'ramping-vus',
         exec:     'default',
-        startTime: `${__ENV.STAGETIME + 10}s`,
+        startTime: `${__ENV.STAGETIME + 20}s`,
         // startTime: '0s',
         startVUs: `${__ENV.USERS}` || 0,
         stages: [
@@ -45,6 +33,18 @@ export let options = {
         gracefulRampDown: '5s',
         gracefulStop:     '5s',
         tags: { executor: 'ramping-vus' },
+        },
+        constant_arrival_rate: {
+        executor: 'constant-arrival-rate',
+        exec:     'constantarrival',
+        startTime: '0s',
+        rate: `${__ENV.RPS}`,
+        timeUnit: '1s',
+        duration: `${__ENV.STAGETIME}`,
+        preAllocatedVUs: `${__ENV.REQRATE_USERS}`,
+        maxVUs: 1000,
+        gracefulStop:     '5s',
+        tags: { executor: 'constant-arrival-rate' },
         },
     },
     // httpDebug: 'full',
